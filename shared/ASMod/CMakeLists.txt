@@ -6,4 +6,5 @@ add_sources(
 	IASEnvironment.h
 	IASMod.h
 	IASModModule.h
+	MemAlloc.cpp
 )

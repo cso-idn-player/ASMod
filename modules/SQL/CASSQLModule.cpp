@@ -6,15 +6,12 @@
 #include <Angelscript/util/IASLogger.h>
 #include <Angelscript/wrapper/CASContext.h>
 #include <Angelscript/ScriptAPI/SQL/CASSQLThreadPool.h>
-#include <Angelscript/add_on/scriptstdstring.h>
 
 #include "ASMod/IASEnvironment.h"
 
 #include "Module.h"
 
 #include "ASHLSQL.h"
-
-#include "utility/CString.h"
 
 #include "CASSQLModule.h"
 

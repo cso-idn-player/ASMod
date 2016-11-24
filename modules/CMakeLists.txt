@@ -47,3 +47,4 @@ set( SHARED_MODULE_LIBRARIES
 add_subdirectory( stub_module )
 add_subdirectory( SCInterop )
 add_subdirectory( SQL )
+add_subdirectory( FileSystem )

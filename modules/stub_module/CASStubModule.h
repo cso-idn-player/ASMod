@@ -1,7 +1,7 @@
 #ifndef STUB_MODULE_CASSTUBMODULE_H
 #define STUB_MODULE_CASSTUBMODULE_H
 
-#include "ASMod/CASModBaseModule.h"
+#include "ASMod/Module/CASModBaseModule.h"
 
 class CASStubModule : public CASModBaseModule
 {

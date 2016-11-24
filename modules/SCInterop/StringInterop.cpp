@@ -7,8 +7,9 @@
 
 #include "utility/CString.h"
 
-#include "ASMod/CASModBaseModule.h"
+#include "ASMod/Module/CASModBaseModule.h"
 #include "ASMod/IASEnvironment.h"
+#include "ASMod/MemAlloc.h"
 #include "Module.h"
 
 #include "StringInterop.h"
@@ -36,7 +37,7 @@ struct CSCCString
 		m_uiCapacity &= ALLOC_MASK;
 
 		//Quick and dirty strcpy into the destination buffer. Sven Co-op will do its thing.
-		m_pszString = reinterpret_cast<char*>( g_pModule->GetEnvironment().GetArrayAllocFunc()( m_uiCapacity ) );
+		m_pszString = reinterpret_cast<char*>( ArrayAllocFunc( m_uiCapacity ) );
 
 		UTIL_SafeStrncpy( m_pszString, pszString, m_uiCapacity );
 
@@ -46,7 +47,7 @@ struct CSCCString
 	//Not really needed, but just in case.
 	~CSCCString()
 	{
-		g_pModule->GetEnvironment().GetArrayFreeFunc()( m_pszString );
+		ArrayFreeFunc( m_pszString );
 	}
 
 	char m_szBuffer[ BUFFER_SIZE ];

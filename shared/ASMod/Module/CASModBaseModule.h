@@ -1,7 +1,7 @@
 #ifndef ASMOD_CASMODBASEMODULE_H
 #define ASMOD_CASMODBASEMODULE_H
 
-#include "IASModModule.h"
+#include "ASMod/IASModModule.h"
 
 class IASMod;
 

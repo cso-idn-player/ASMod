@@ -1,7 +1,7 @@
 #ifndef SQL_CASSQLMODULE_H
 #define SQL_CASSQLMODULE_H
 
-#include "ASMod/CASModBaseModule.h"
+#include "ASMod/Module/CASModBaseModule.h"
 
 class CASSQLModule : public CASModBaseModule
 {

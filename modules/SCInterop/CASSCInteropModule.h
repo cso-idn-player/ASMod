@@ -1,7 +1,7 @@
 #ifndef SCINTEROP_CASSCINTEROPMODULE_H
 #define SCINTEROP_CASSCINTEROPMODULE_H
 
-#include "ASMod/CASModBaseModule.h"
+#include "ASMod/Module/CASModBaseModule.h"
 
 class CASSCInteropModule : public CASModBaseModule
 {

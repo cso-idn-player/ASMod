@@ -10,6 +10,7 @@
 
 #include "InterfaceHelpers.h"
 #include "ASMod/CreateInterface_api.h"
+#include "ASMod/MemAlloc.h"
 
 #include "Module.h"
 
@@ -29,6 +30,10 @@ bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const si
 	}
 
 	m_pEnvironment = &m_pASMod->GetEnvironment();
+
+	SetMemAllocFuncs(
+		m_pEnvironment->GetAllocFunc(), m_pEnvironment->GetFreeFunc(),
+		m_pEnvironment->GetArrayAllocFunc(), m_pEnvironment->GetArrayFreeFunc() );
 
 	auto pEngFuncs = IFACE_CreateCStyleFromList<enginefuncs_t*>( pFactories, uiNumFactories, ENGINEFUNCS_T_NAME );
 
@@ -64,6 +69,10 @@ bool CASModBaseModule::Shutdown()
 	gpMetaGlobals = nullptr;
 	gpGlobals = nullptr;
 	memset( &g_engfuncs, 0, sizeof( g_engfuncs ) );
+
+	SetMemAllocFuncs(
+		nullptr, nullptr,
+		nullptr, nullptr );
 
 	m_pEnvironment = nullptr;
 

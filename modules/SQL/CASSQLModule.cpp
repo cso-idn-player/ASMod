@@ -43,8 +43,6 @@ bool CASSQLModule::Shutdown()
 {
 	g_pSQLThreadPool->Stop( false );
 
-	m_pEnvironment = nullptr;
-
 	return BaseClass::Shutdown();
 }
 

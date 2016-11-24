@@ -35,6 +35,8 @@ add_sources(
 	SvenCoopSupport.cpp
 )
 
+add_subdirectory( ${CMAKE_SOURCE_DIR}/shared shared )
+
 #TODO: shouldn't be copy pasting this into the repository - Solokiller
 add_subdirectory( ${CMAKE_SOURCE_DIR}/common common )
 add_subdirectory( ${CMAKE_SOURCE_DIR}/keyvalues keyvalues )
@@ -66,6 +68,7 @@ target_include_directories( ${PLUGIN_NAME} PRIVATE
 #Define preprocessor symbols here.
 target_compile_definitions( ${PLUGIN_NAME} PRIVATE
 	${SHARED_DEFINITIONS}
+	ASMOD_PLUGIN
 )
 
 #Add library dependencies here.

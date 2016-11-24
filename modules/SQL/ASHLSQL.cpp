@@ -9,6 +9,8 @@
 
 #include <Angelscript/ScriptAPI/SQL/CASSQLThreadPool.h>
 
+#include <Angelscript/ScriptAPI/SQL/ASSQL.h>
+
 #include <Angelscript/ScriptAPI/SQL/SQLite/ASSQLite.h>
 #include <Angelscript/ScriptAPI/SQL/SQLite/CASSQLiteConnection.h>
 
@@ -220,6 +222,7 @@ void RegisterScriptHLSQL( asIScriptEngine& engine )
 	RegisterScriptCTime( engine );
 	RegisterScriptCDateTime( engine );
 
+	RegisterScriptSQLCommon( engine );
 	RegisterScriptSQLite( engine );
 	RegisterScriptMySQL( engine );
 

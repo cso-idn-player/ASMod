@@ -185,6 +185,10 @@ endif()
 #The base directory for all Metamod data.
 set( META_BASE_DIRECTORY ${GAME_DIRECTORY}/addons )
 
+#The directory where third party libraries are located.
+set( META_BIN_DIR_RELATIVE "addons/bin" )
+set( META_BIN_DIRECTORY "${GAME_DIRECTORY}/${META_BIN_DIR_RELATIVE}" )
+
 #Configurable by user.
 set( SDK_DIRECTORY "${CMAKE_SOURCE_DIR}/hlsdk" CACHE PATH "Path to the Half-Life SDK directory" )
 
@@ -281,6 +285,7 @@ endif()
 set( SHARED_DEFINITIONS
 	${OPT_TYPE}
 	${HLSDK_3_2_OLD_EIFACE_FLAG}
+	META_BIN_DIRECTORY="${META_BIN_DIR_RELATIVE}"
 )
 
 if( OPT STREQUAL "opt-fast" )

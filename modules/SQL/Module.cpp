@@ -50,7 +50,7 @@ FARPROC WINAPI DelayHook(
 			if( !pszGameDir )
 				return nullptr;
 
-			const int iResult = snprintf( szPath, sizeof( szPath ), "%s/%s", pszGameDir, pdli->szDll );
+			const int iResult = snprintf( szPath, sizeof( szPath ), "%s/%s/%s", pszGameDir, META_BIN_DIRECTORY, pdli->szDll );
 
 			if( iResult < 0 || static_cast<size_t>( iResult ) >= sizeof( szPath ) )
 				return nullptr;

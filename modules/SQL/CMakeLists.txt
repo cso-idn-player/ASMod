@@ -13,7 +13,14 @@ set( MODULE_NAME SQL )
 
 #Set module specific linker flags here.
 #Delay load SQL libraries
-set( MODULE_LINK_FLAGS "/DELAYLOAD:sqlite3.dll /DELAYLOAD:libmariadb.dll" )
+set( MODULE_LINK_FLAGS )
+
+if( MSVC )
+	set( MODULE_LINK_FLAGS
+		${MODULE_LINK_FLAGS}
+		"/DELAYLOAD:sqlite3.dll /DELAYLOAD:libmariadb.dll"
+	)
+endif()
 
 #Add module sources here, or using add_subdirectory.
 add_sources(
@@ -69,8 +76,11 @@ if( WIN32 )
 	find_library( MARIADBD "mariadbclientd${CMAKE_STATIC_LIBRARY_SUFFIX}" PATHS ${CMAKE_SOURCE_DIR}/external/MariaDB/lib )
 	set( PTHREAD "" )
 else()
-	find_library( SQLITE3 "${CMAKE_SHARED_LIBRARY_PREFIX}sqlite3${CMAKE_SHARED_LIBRARY_SUFFIX}" PATHS "${GAME_BASE_PATH}" )
-	find_library( MARIADB "${CMAKE_SHARED_LIBRARY_PREFIX}mariadb.so.2" PATHS "${GAME_BASE_PATH}" )
+	#The first time you generate the CMake projects there won't be libraries in the destination directory, so we'll link with the local ones instead.
+	#After you've built the project the first time, regenerate the CMake project to link with the correct ones.
+	#Avoid linking with libraries installed in the local system's library directories, always use the version distributed with this repository.
+	find_library( SQLITE3 "${CMAKE_SHARED_LIBRARY_PREFIX}sqlite3${CMAKE_SHARED_LIBRARY_SUFFIX}" PATHS "${META_BIN_DIRECTORY}" ${CMAKE_SOURCE_DIR}/external/SQLite/lib NO_DEFAULT_PATH )
+	find_library( MARIADB "${CMAKE_SHARED_LIBRARY_PREFIX}mariadb.so.2" PATHS "${META_BIN_DIRECTORY}" ${CMAKE_SOURCE_DIR}/external/MariaDB/lib NO_DEFAULT_PATH )
 	set( MARIADBD ${MARIADB} )
 	set( PTHREAD "pthread" )
 	
@@ -115,39 +125,45 @@ create_source_groups( "${CMAKE_SOURCE_DIR}" )
 #Clear sources list for next target.
 clear_sources()
 
+#Make the bin directory if it doesn't exist.
+#Must be done before the commands below, so PRE_BUILD is used since CMake reorders the commands on Linux.
+add_custom_command( TARGET ${MODULE_NAME} PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${META_BIN_DIRECTORY}
+)
+
 if( WIN32 )
 	#Copy the sqlite3 dll so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/SQLite/lib/sqlite3.dll"
-		"${GAME_DIRECTORY}"
+		"${META_BIN_DIRECTORY}"
 	)
 
 	#Copy the mariadb dll so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/MariaDB/lib/libmariadb.dll"
-		"${GAME_DIRECTORY}"
+		"${META_BIN_DIRECTORY}"
 	)
 
 	#Copy the mariadbd dll so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/MariaDB/lib/libmariadbd.dll"
-		"${GAME_DIRECTORY}"
+		"${META_BIN_DIRECTORY}"
 	)
 else()
 	#Copy the sqlite3 library so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} PRE_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/SQLite/lib/libsqlite3.so"
-		"${GAME_DIRECTORY}"
+		"${META_BIN_DIRECTORY}"
 	)
 
 	#Copy the mariadb library so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} PRE_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/MariaDB/lib/libmariadb.so.2"
-		"${GAME_DIRECTORY}>"
+		"${META_BIN_DIRECTORY}"
 	)
 endif()

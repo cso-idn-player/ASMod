@@ -95,6 +95,11 @@ public:
 	uint64_t Write( const CASBLOB* pBlob );
 
 	/**
+	*	Flushes any pending writes to disk.
+	*/
+	void Flush();
+
+	/**
 	*	Reads a single character. Returns '\0' if nothing could be read. (an empty string)
 	*/
 	std::string ReadCharacter();

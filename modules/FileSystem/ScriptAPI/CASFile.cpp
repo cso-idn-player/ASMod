@@ -119,6 +119,16 @@ uint64_t CASFile::Write( const CASBLOB* pBlob )
 	return uiBytesWritten;
 }
 
+void CASFile::Flush()
+{
+	assert( IsOpen() );
+
+	if( !IsWriting() )
+		return;
+
+	fflush( m_pFile );
+}
+
 std::string CASFile::ReadCharacter()
 {
 	assert( IsOpen() );
@@ -290,6 +300,18 @@ void RegisterScriptFile( asIScriptEngine& scriptEngine )
 		asMETHOD( CASFile, EOFReached ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
+		pszObjectName, "uint64 Write(const " AS_STRING_OBJNAME "& in szString)",
+		asMETHODPR( CASFile, Write, ( const std::string& ), uint64_t ), asCALL_THISCALL );
+
+	scriptEngine.RegisterObjectMethod(
+		pszObjectName, "uint64 Write(const BLOB@ pBlob)",
+		asMETHODPR( CASFile, Write, ( const CASBLOB* ), uint64_t ), asCALL_THISCALL );
+
+	scriptEngine.RegisterObjectMethod(
+		pszObjectName, "void Flush()",
+		asMETHOD( CASFile, Flush ), asCALL_THISCALL );
+
+	scriptEngine.RegisterObjectMethod(
 		pszObjectName, AS_STRING_OBJNAME " ReadCharacter()",
 		asMETHOD( CASFile, ReadCharacter ), asCALL_THISCALL );
 
@@ -308,12 +330,4 @@ void RegisterScriptFile( asIScriptEngine& scriptEngine )
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "BLOB@ ReadBlob(size_t uiSizeInBytes = 0)",
 		asMETHODPR( CASFile, ReadBlob, ( size_t ), CASBLOB* ), asCALL_THISCALL );
-
-	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "uint64 Write(const " AS_STRING_OBJNAME "& in szString)",
-		asMETHODPR( CASFile, Write, ( const std::string& ), uint64_t ), asCALL_THISCALL );
-
-	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "uint64 Write(const BLOB@ pBlob)",
-		asMETHODPR( CASFile, Write, ( const CASBLOB* ), uint64_t ), asCALL_THISCALL );
 }

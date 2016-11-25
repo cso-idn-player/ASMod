@@ -139,6 +139,8 @@ char* UTIL_FixSlashes( char* pszPath );
 
 char* UTIL_SafeStrncpy( char* pszDest, const char* pszSource, const size_t uiSizeInCharacters );
 
+char* UTIL_SafeStrnCat( char* pszDest, const char* pszSource, const size_t uiSizeInCharacters );
+
 /*
 *	This code is based on the following Stack Overflow answer: http://stackoverflow.com/a/217605
 */

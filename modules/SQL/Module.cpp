@@ -26,8 +26,7 @@ plugin_info_t Plugin_info = {
 	PT_STARTUP,	// (when) unloadable
 };
 
-//Config file that contains the MySQL settings to use for default connections.
-cvar_t	as_mysql_config = { "as_mysql_config", "server/default_mysql_config.txt", FCVAR_SERVER | FCVAR_UNLOGGED };
+cvar_t* as_mysql_config = nullptr;
 
 #ifdef WIN32
 //See post VS 2015 update 3 delayimp.h for the reason why this has to be defined. - Solokiller

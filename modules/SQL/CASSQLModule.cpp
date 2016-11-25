@@ -9,6 +9,8 @@
 
 #include "ASMod/IASEnvironment.h"
 
+#include "MetaHelpers.h"
+
 #include "Module.h"
 
 #include "ASHLSQL.h"
@@ -27,7 +29,7 @@ bool CASSQLModule::Initialize( const CreateInterfaceFn* pFactories, const size_t
 	if( !BaseClass::Initialize( pFactories, uiNumFactories ) )
 		return false;
 
-	CVAR_REGISTER( &as_mysql_config );
+	as_mysql_config = Meta_RegCVar( "as_mysql_config", "server/default_mysql_config.txt", FCVAR_SERVER | FCVAR_UNLOGGED );
 
 	auto& scriptEngine = *m_pEnvironment->GetScriptEngine();
 

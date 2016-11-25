@@ -34,6 +34,7 @@
 #define stricmp _stricmp
 #define strnicmp _strnicmp
 #define alloca _alloca
+#define fileno _fileno
 
 //Older versions of Visual Studio (< VS2015) didn't define these. - Solokiller
 #if _MSC_VER < 1900

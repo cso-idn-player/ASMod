@@ -108,8 +108,8 @@ char* UTIL_FixSlashes( char* pszPath )
 
 	for( char* pszPos = pszPath; *pszPos; ++pszPos )
 	{
-		if( *pszPos == FILESYSTEM_OTHER_PATH_SEPARATOR_CHAR )
-			*pszPos = FILESYSTEM_PATH_SEPARATOR_CHAR;
+		if( *pszPos == '\\' )
+			*pszPos = '/';
 	}
 
 	return pszPath;
@@ -118,6 +118,17 @@ char* UTIL_FixSlashes( char* pszPath )
 char* UTIL_SafeStrncpy( char* pszDest, const char* pszSource, const size_t uiSizeInCharacters )
 {
 	strncpy( pszDest, pszSource, uiSizeInCharacters );
+
+	pszDest[ uiSizeInCharacters - 1 ] = '\0';
+
+	return pszDest;
+}
+
+char* UTIL_SafeStrnCat( char* pszDest, const char* pszSource, const size_t uiSizeInCharacters )
+{
+	const auto length = strlen( pszDest );
+
+	strncat( pszDest, pszSource, uiSizeInCharacters - length - 1 );
 
 	pszDest[ uiSizeInCharacters - 1 ] = '\0';
 

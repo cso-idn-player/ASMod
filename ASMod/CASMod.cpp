@@ -36,7 +36,7 @@ bool CASMod::Initialize()
 		//The path ends with dlls/ASMod.ext, so strip that part. -Solokiller
 
 		{
-			char* pszEnd = strrchr( m_szLoaderDir, FILESYSTEM_PATH_SEPARATOR_CHAR );
+			char* pszEnd = strrchr( m_szLoaderDir, '/' );
 
 			//If this can't be found, something is very wrong since there should always be at least 3 separators (addons/plugin_name/dlls/lib.ext)
 			if( !pszEnd )
@@ -47,7 +47,7 @@ bool CASMod::Initialize()
 
 			*pszEnd = '\0';
 
-			pszEnd = strrchr( m_szLoaderDir, FILESYSTEM_PATH_SEPARATOR_CHAR );
+			pszEnd = strrchr( m_szLoaderDir, '/' );
 
 			if( !pszEnd )
 			{

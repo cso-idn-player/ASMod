@@ -131,7 +131,9 @@ static CASMySQLConnection* HLCreateMySQLConnection( const std::string& szHost, c
 */
 static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::string& szDatabase = "" )
 {
-	if( !( *as_mysql_config.string ) )
+	const char* const pszConfigFile = as_mysql_config->string;
+
+	if( !( *pszConfigFile ) )
 	{
 		LOG_MESSAGE( PLID, "SQL::CreateMySQLConnectionWithDefaults: No config file specified; cannot create connection\n" );
 		return nullptr;
@@ -141,7 +143,7 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 	//Only load from the mod directory to prevent malicious servers from downloading files and overriding them.
 	char szPath[ PATH_MAX ];
 
-	const auto result = snprintf( szPath, sizeof( szPath ), "%s/%s", gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR ), as_mysql_config.string );
+	const auto result = snprintf( szPath, sizeof( szPath ), "%s/%s", gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR ), pszConfigFile );
 
 	if( !PrintfSuccess( result, sizeof( szPath ) ) )
 	{
@@ -153,7 +155,7 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 
 	if( !parser.HasInputData() )
 	{
-		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: Couldn't open config file \"%s\"!\n", as_mysql_config.string );
+		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: Couldn't open config file \"%s\"!\n", pszConfigFile );
 		return nullptr;
 	}
 

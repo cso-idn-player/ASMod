@@ -1,7 +1,15 @@
 #ifndef FILESYSTEM_SCRIPTAPI_CASDIRECTORYLIST_H
 #define FILESYSTEM_SCRIPTAPI_CASDIRECTORYLIST_H
 
+#include "StringUtils.h"
+
+#include "ASMod/Module/CASModBaseModule.h"
+#include "Module.h"
+#include "ASMod/IASEnvironment.h"
+#include <Angelscript/util/IASLogger.h>
+
 #include "ASFileSystemConstants.h"
+#include "CASDirectory.h"
 
 #ifdef CreateDirectory
 #undef CreateDirectory
@@ -10,8 +18,6 @@
 #ifdef RemoveDirectory
 #undef RemoveDirectory
 #endif
-
-class CASDirectory;
 
 /**
 *	Stores a list of directories known to the virtual filesystem.

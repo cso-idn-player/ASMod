@@ -1,6 +1,7 @@
 #include <angelscript.h>
 
 #include <extdll.h>
+#include <meta_api.h>
 
 #include "ASFileSystemConstants.h"
 #include "CASBLOB.h"

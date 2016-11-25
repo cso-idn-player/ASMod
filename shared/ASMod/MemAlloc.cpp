@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <new>
 
 #include "MemAlloc.h"

@@ -2,6 +2,8 @@
 
 #include <experimental/filesystem>
 
+#include <Angelscript/util/IASLogger.h>
+
 #include <extdll.h>
 #include <meta_api.h>
 

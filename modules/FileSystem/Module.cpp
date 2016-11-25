@@ -25,3 +25,7 @@ plugin_info_t Plugin_info = {
 	PT_STARTUP,	// (when) loadable
 	PT_STARTUP,	// (when) unloadable
 };
+
+CASVirtualFileSystem* g_pASFileSystem = nullptr;
+
+cvar_t* asmod_fs_logfileaccess = nullptr;

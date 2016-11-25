@@ -1,0 +1,20 @@
+add_sources(
+	ASFileSystem.cpp
+	ASFileSystem.h
+	ASFileSystemConstants.cpp
+	ASFileSystemConstants.h
+	ASFileSystemUtils.cpp
+	ASFileSystemUtils.h
+	CASBLOB.cpp
+	CASBLOB.h
+	CASDirectory.cpp
+	CASDirectory.h
+	CASDirectoryList.cpp
+	CASDirectoryList.h
+	CASExtensionList.cpp
+	CASExtensionList.h
+	CASFile.cpp
+	CASFile.h
+	CASVirtualFileSystem.cpp
+	CASVirtualFileSystem.h
+)

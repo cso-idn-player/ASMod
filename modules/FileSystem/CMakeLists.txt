@@ -20,9 +20,18 @@ add_sources(
 	${SHARED_MODULE_SOURCES}
 	CASFileSystemModule.h
 	CASFileSystemModule.cpp
+	ConCommands.h
+	ConCommands.cpp
 	Module.h
 	Module.cpp
 )
+
+add_subdirectory( ScriptAPI )
+
+#TODO: shouldn't be copy pasting this into the repository - Solokiller
+add_subdirectory( ${CMAKE_SOURCE_DIR}/common common )
+add_subdirectory( ${CMAKE_SOURCE_DIR}/keyvalues keyvalues )
+add_subdirectory( ${CMAKE_SOURCE_DIR}/utility utility )
 
 #Add public module headers here, if any.
 #add_includes(

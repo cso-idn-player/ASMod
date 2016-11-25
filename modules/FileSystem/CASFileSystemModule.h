@@ -3,6 +3,8 @@
 
 #include "ASMod/Module/CASModBaseModule.h"
 
+class CASVirtualFileSystem;
+
 class CASFileSystemModule : public CASModBaseModule
 {
 public:
@@ -18,6 +20,12 @@ public:
 	bool Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories ) override;
 
 	bool Shutdown() override;
+
+private:
+	/**
+	*	Sets up directory access for the given filesystem.
+	*/
+	void SetupDirectoryAccess( CASVirtualFileSystem& fileSystem );
 
 private:
 	CASFileSystemModule( const CASFileSystemModule& ) = delete;

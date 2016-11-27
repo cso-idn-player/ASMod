@@ -134,6 +134,7 @@ private:
 	CASSimpleEnvironment m_Environment;
 
 	CASRefPtr<IASLogger> m_Logger;
+	CASRefPtr<IASLogger> m_FileLogger;
 
 	Modules_t m_Modules;
 

@@ -6,6 +6,7 @@
 
 #include "ASMod/IASModModule.h"
 #include "CASModModuleInfo.h"
+#include "CASModLogger.h"
 
 #include "keyvalues/Keyvalues.h"
 
@@ -93,6 +94,11 @@ void CASMod::Shutdown()
 	{
 		as::SetLogger( nullptr );
 		m_Logger.Reset();
+	}
+
+	if( m_FileLogger )
+	{
+		m_FileLogger.Reset();
 	}
 
 	if( UsingLocalEnvironment() )
@@ -357,17 +363,23 @@ bool CASMod::SetupEnvironment()
 	//Provide a logger if the game didn't.
 	if( !m_Logger )
 	{
-		char szLogPath[ PATH_MAX ];
-
-		const auto result = snprintf( szLogPath, sizeof( szLogPath ), "%s/logs/LASMod", gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR ) );
-
-		if( !PrintfSuccess( result, sizeof( szLogPath ) ) )
+		//Create the file logger.
 		{
-			//Fallback: log dir in main game directory.
-			UTIL_SafeStrncpy( szLogPath, "logs/LASMod", sizeof( szLogPath ) );
+			char szLogPath[ PATH_MAX ];
+
+			const auto result = snprintf( szLogPath, sizeof( szLogPath ), "%s/logs/LASMod", gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR ) );
+
+			if( !PrintfSuccess( result, sizeof( szLogPath ) ) )
+			{
+				//Fallback: log dir in main game directory.
+				UTIL_SafeStrncpy( szLogPath, "logs/LASMod", sizeof( szLogPath ) );
+			}
+
+			m_FileLogger.Set( new CASFileLogger( szLogPath, CASFileLogger::Flag::USE_DATESTAMP | CASFileLogger::Flag::USE_TIMESTAMP | CASFileLogger::Flag::OUTPUT_LOG_LEVEL ), true );
 		}
 
-		m_Logger.Set( new CASFileLogger( szLogPath, CASFileLogger::Flag::USE_DATESTAMP | CASFileLogger::Flag::USE_TIMESTAMP | CASFileLogger::Flag::OUTPUT_LOG_LEVEL ), true );
+		//Combined file/console logging.
+		m_Logger.Set( new CASModLogger( m_FileLogger.Get() ), true );
 
 		m_Environment.SetLogger( m_Logger );
 	}

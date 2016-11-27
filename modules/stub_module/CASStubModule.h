@@ -15,7 +15,9 @@ public:
 
 	const char* GetName() const override final;
 
-	bool Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories ) override;
+	const char* GetLogTag() const override final;
+
+	bool Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories, IASLogger* pLogger ) override;
 
 	bool Shutdown() override;
 

@@ -14,9 +14,14 @@ const char* CASStubModule::GetName() const
 	return "stub_module";
 }
 
-bool CASStubModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories )
+const char* CASStubModule::GetLogTag() const
 {
-	if( !BaseClass::Initialize( pFactories, uiNumFactories ) )
+	return "STUB-MODULE";
+}
+
+bool CASStubModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories, IASLogger* pLogger )
+{
+	if( !BaseClass::Initialize( pFactories, uiNumFactories, pLogger ) )
 		return false;
 
 	as::Diagnostic( "Initializing module\n" );

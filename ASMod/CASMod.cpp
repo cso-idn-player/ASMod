@@ -521,9 +521,8 @@ bool CASMod::LoadModuleFromBlock( kv::Block& block )
 		Sys_GetFactoryThis()
 	};
 
-	if( !info.GetModule()->Initialize( factories, ARRAYSIZE( factories ) ) )
+	if( !info.Initialize( factories, ARRAYSIZE( factories ) ) )
 	{
-		LOG_ERROR( PLID, "Failed to initialize module \"%s\"", info.GetModule()->GetName() );
 		return false;
 	}
 

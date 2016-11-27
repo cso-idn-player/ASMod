@@ -1,6 +1,14 @@
 #ifndef ASMOD_CASMODMODULEINFO_H
 #define ASMOD_CASMODMODULEINFO_H
 
+#include "Platform.h"
+
+#include <Angelscript/util/CASRefPtr.h>
+
+#include "interface.h"
+
+#include "CASModModuleLogger.h"
+
 class CSysModule;
 class IASModModule;
 
@@ -42,6 +50,14 @@ public:
 	bool Load( const char* pszFilename );
 
 	/**
+	*	Initializes the module.
+	*	@param pFactories Pointer to an array of factories.
+	*	@param uiNumFactories Number of factories in the array pointer to by pFactories.
+	*	@return Whether the module initialized successfully.
+	*/
+	bool Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories );
+
+	/**
 	*	Shuts down the module.
 	*/
 	bool Shutdown();
@@ -55,6 +71,8 @@ public:
 private:
 	CSysModule* m_hHandle = nullptr;
 	IASModModule* m_pModule = nullptr;
+
+	CASRefPtr<CASModModuleLogger> m_Logger;
 
 private:
 	CASModModuleInfo( const CASModModuleInfo& ) = delete;

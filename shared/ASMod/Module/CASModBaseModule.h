@@ -4,6 +4,7 @@
 #include "ASMod/IASModModule.h"
 
 class IASMod;
+class IASEnvironment;
 
 /**
 *	Base class for ASMod modules.
@@ -14,7 +15,7 @@ public:
 	CASModBaseModule() = default;
 	virtual ~CASModBaseModule() = default;
 
-	bool Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories ) override;
+	bool Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories, IASLogger* pLogger ) override;
 
 	bool Shutdown() override;
 

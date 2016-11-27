@@ -18,9 +18,14 @@ const char* CASSCInteropModule::GetName() const
 	return "SCInterop";
 }
 
-bool CASSCInteropModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories )
+const char* CASSCInteropModule::GetLogTag() const
 {
-	if( !BaseClass::Initialize( pFactories, uiNumFactories ) )
+	return "SC-INTEROP";
+}
+
+bool CASSCInteropModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories, IASLogger* pLogger )
+{
+	if( !BaseClass::Initialize( pFactories, uiNumFactories, pLogger ) )
 		return false;
 
 	as::Diagnostic( "Registering Sven Co-op interop features\n" );

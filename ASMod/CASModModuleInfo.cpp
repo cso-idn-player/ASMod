@@ -26,6 +26,7 @@ CASModModuleInfo::~CASModModuleInfo()
 }
 
 CASModModuleInfo::CASModModuleInfo( CASModModuleInfo&& other )
+	: m_Logger( std::move( other.m_Logger ) )
 {
 	std::swap( m_hHandle, other.m_hHandle );
 	std::swap( m_pModule, other.m_pModule );
@@ -37,6 +38,7 @@ CASModModuleInfo& CASModModuleInfo::operator=( CASModModuleInfo&& other )
 	{
 		std::swap( m_hHandle, other.m_hHandle );
 		std::swap( m_pModule, other.m_pModule );
+		m_Logger = std::move( other.m_Logger );
 	}
 
 	return *this;
@@ -81,6 +83,19 @@ bool CASModModuleInfo::Load( const char* pszFilename )
 	m_hHandle = handle.release();
 
 	LOG_MESSAGE( PLID, "Loaded module \"%s\"", pszFilename );
+
+	return true;
+}
+
+bool CASModModuleInfo::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories )
+{
+	m_Logger.Set( new CASModModuleLogger( as::GetLogger(), GetModule()->GetLogTag() ), true );
+
+	if( !GetModule()->Initialize( pFactories, uiNumFactories, m_Logger.Get() ) )
+	{
+		LOG_ERROR( PLID, "Failed to initialize module \"%s\"", GetModule()->GetName() );
+		return false;
+	}
 
 	return true;
 }

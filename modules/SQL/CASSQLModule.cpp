@@ -24,9 +24,14 @@ const char* CASSQLModule::GetName() const
 	return "SQL";
 }
 
-bool CASSQLModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories )
+const char* CASSQLModule::GetLogTag() const
 {
-	if( !BaseClass::Initialize( pFactories, uiNumFactories ) )
+	return "SQL";
+}
+
+bool CASSQLModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories, IASLogger* pLogger )
+{
+	if( !BaseClass::Initialize( pFactories, uiNumFactories, pLogger ) )
 		return false;
 
 	as_mysql_config = Meta_RegCVar( "as_mysql_config", "server/default_mysql_config.txt", FCVAR_SERVER | FCVAR_UNLOGGED );

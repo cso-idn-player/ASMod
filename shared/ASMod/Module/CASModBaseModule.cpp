@@ -18,7 +18,7 @@
 
 #include "CASModBaseModule.h"
 
-bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories )
+bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories, IASLogger* pLogger )
 {
 	g_pModule = this;
 
@@ -34,7 +34,7 @@ bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const si
 	g_pASEnv = m_pEnvironment = &m_pASMod->GetEnvironment();
 
 	//Install the logger.
-	as::SetLogger( m_pEnvironment->GetLogger() );
+	as::SetLogger( pLogger );
 
 	SetMemAllocFuncs(
 		m_pEnvironment->GetAllocFunc(), m_pEnvironment->GetFreeFunc(),

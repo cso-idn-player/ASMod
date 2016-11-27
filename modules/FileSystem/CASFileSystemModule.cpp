@@ -21,12 +21,17 @@ EXPOSE_SINGLE_INTERFACE( CASFileSystemModule, IASModModule, IASMODMODULE_NAME );
 
 const char* CASFileSystemModule::GetName() const
 {
-	return "stub_module";
+	return "FileSystem";
 }
 
-bool CASFileSystemModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories )
+const char* CASFileSystemModule::GetLogTag() const
 {
-	if( !BaseClass::Initialize( pFactories, uiNumFactories ) )
+	return "FILESYSTEM";
+}
+
+bool CASFileSystemModule::Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories, IASLogger* pLogger )
+{
+	if( !BaseClass::Initialize( pFactories, uiNumFactories, pLogger ) )
 		return false;
 
 	as::Diagnostic( "Registering FileSystem API\n" );

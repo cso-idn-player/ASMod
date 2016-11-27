@@ -25,6 +25,7 @@ add_sources(
 	CASMod.cpp
 	CASModModuleInfo.h
 	CASModModuleInfo.cpp
+	CASModModuleLogger.h
 	CreateInterface_api.cpp
 	engine_api.cpp
 	h_export.cpp

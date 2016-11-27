@@ -3,12 +3,7 @@
 
 #include "interface.h"
 
-class IASEnvironment;
-typedef struct enginefuncs_s enginefuncs_t;
-struct globalvars_t;
-typedef struct meta_globals_s meta_globals_t;
-struct gamedll_funcs_t;
-typedef struct meta_util_funcs_s mutil_funcs_t;
+class IASLogger;
 
 /**
 *	Represents an ASMod Module.
@@ -23,12 +18,18 @@ public:
 	virtual const char* GetName() const = 0;
 
 	/**
+	*	@return The tag to prefix to log messages.
+	*/
+	virtual const char* GetLogTag() const = 0;
+
+	/**
 	*	Initializes the module.
 	*	@param pFactories Pointer to an array of factories.
 	*	@param uiNumFactories Number of factories in the array pointer to by pFactories.
+	*	@param pLogger The logger for this module.
 	*	@return Whether initialization succeeded.
 	*/
-	virtual bool Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories ) = 0;
+	virtual bool Initialize( const CreateInterfaceFn* pFactories, const size_t uiNumFactories, IASLogger* pLogger ) = 0;
 
 	/**
 	*	Shuts down the module.

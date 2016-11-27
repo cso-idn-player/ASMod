@@ -1,12 +1,7 @@
 #ifndef SQL_MODULE_H
 #define SQL_MODULE_H
 
-class CASModBaseModule;
-
-/**
-*	This module's instance.
-*/
-extern CASModBaseModule* g_pModule;
+#include "ASMod/Module/Module_Common.h"
 
 /**
 *	Config file that contains the MySQL settings to use for default connections.

@@ -1,13 +1,9 @@
 #ifndef FILESYSTEM_MODULE_H
 #define FILESYSTEM_MODULE_H
 
-class CASModBaseModule;
-class CASVirtualFileSystem;
+#include "ASMod/Module/Module_Common.h"
 
-/**
-*	This module's instance.
-*/
-extern CASModBaseModule* g_pModule;
+class CASVirtualFileSystem;
 
 /**
 *	The virtual filesystem used by Angelscript.

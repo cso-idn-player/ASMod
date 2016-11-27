@@ -1,11 +1,6 @@
 #ifndef STUB_MODULE_MODULE_H
 #define STUB_MODULE_MODULE_H
 
-class CASModBaseModule;
-
-/**
-*	This module's instance.
-*/
-extern CASModBaseModule* g_pModule;
+#include "ASMod/Module/Module_Common.h"
 
 #endif //STUB_MODULE_MODULE_H

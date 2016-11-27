@@ -14,7 +14,7 @@
 #include "ASMod/CreateInterface_api.h"
 #include "ASMod/MemAlloc.h"
 
-#include "Module.h"
+#include "Module_Common.h"
 
 #include "CASModBaseModule.h"
 
@@ -31,7 +31,7 @@ bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const si
 		return false;
 	}
 
-	m_pEnvironment = &m_pASMod->GetEnvironment();
+	g_pASEnv = m_pEnvironment = &m_pASMod->GetEnvironment();
 
 	SetMemAllocFuncs(
 		m_pEnvironment->GetAllocFunc(), m_pEnvironment->GetFreeFunc(),
@@ -76,7 +76,7 @@ bool CASModBaseModule::Shutdown()
 		nullptr, nullptr,
 		nullptr, nullptr );
 
-	m_pEnvironment = nullptr;
+	g_pASEnv = m_pEnvironment = nullptr;
 
 	m_pASMod = nullptr;
 

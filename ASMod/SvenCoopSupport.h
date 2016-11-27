@@ -3,6 +3,8 @@
 
 #include <angelscript.h>
 
+#include "ASMod/CASSimpleEnvironment.h"
+
 namespace sc
 {
 /**
@@ -55,14 +57,9 @@ public:
 	*/
 	bool IsConfigLoaded() const { return m_bLoadedConfig; }
 
-	asALLOCFUNC_t GetAllocFunc() { return m_AllocFunc; }
+	CASSimpleEnvironment& GetEnvironment() { return m_Environment; }
 
-	asFREEFUNC_t GetFreeFunc() { return m_FreeFunc; }
-
-	asALLOCFUNC_t GetArrayAllocFunc() { return m_ArrayAllocFunc; }
-
-	asFREEFUNC_t GetArrayFreeFunc() { return m_ArrayFreeFunc; }
-
+private:
 	/**
 	*	Queries the server for its script engine.
 	*	@param[ out ] pOutScriptEngine Pointer to the script engine, or null if it could not be retrieved.
@@ -73,10 +70,8 @@ public:
 private:
 	bool m_bLoadedConfig = false;
 
-	asALLOCFUNC_t m_AllocFunc = nullptr;
-	asFREEFUNC_t m_FreeFunc = nullptr;
-	asALLOCFUNC_t m_ArrayAllocFunc = nullptr;
-	asFREEFUNC_t m_ArrayFreeFunc = nullptr;
+	CASSimpleEnvironment m_Environment;
+
 	ManagerFunc m_ManagerFunc = nullptr;
 
 private:

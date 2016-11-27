@@ -12,17 +12,17 @@
 namespace sc
 {
 template<typename TYPE>
-bool ParseAddress( const char* pszAddress, const char* pszName, TYPE& pOutPointer )
+bool ParseAddress( kv::KV* pKV, TYPE& pOutPointer )
 {
 	pOutPointer = nullptr;
 
-	long long iValue = strtoll( pszAddress, nullptr, 16 );
+	long long iValue = strtoll( pKV->GetValue().CStr(), nullptr, 16 );
 
 	auto pPointer = reinterpret_cast<TYPE>( iValue );
 
 	if( !pPointer )
 	{
-		LOG_ERROR( PLID, "Memory address \"%p\" for \"%s\" is invalid", pPointer, pszName );
+		LOG_ERROR( PLID, "Memory address \"%p\" for \"%s\" is invalid", pPointer, pKV->GetKey().CStr() );
 		return false;
 	}
 
@@ -86,23 +86,49 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 		return;
 	}
 
+	auto pContext = pPlatform->FindFirstChild<kv::KV>( "contextFunc" );
+
 	auto pAlloc = pPlatform->FindFirstChild<kv::KV>( "allocFunc" );
 	auto pFree = pPlatform->FindFirstChild<kv::KV>( "freeFunc" );
 	auto pArrayAlloc = pPlatform->FindFirstChild<kv::KV>( "arrayAllocFunc" );
 	auto pArrayFree = pPlatform->FindFirstChild<kv::KV>( "arrayFreeFunc" );
+
+	auto pLibVersion = pPlatform->FindFirstChild<kv::KV>( "libVersionFunc" );
+	auto pLibOptions = pPlatform->FindFirstChild<kv::KV>( "libOptionsFunc" );
+
 	auto pManager = pPlatform->FindFirstChild<kv::KV>( "managerFunc" );
 
-	if( !pAlloc || !pFree || !pArrayAlloc || !pArrayFree || !pManager )
+	if( !pContext ||
+		!pAlloc ||
+		!pFree ||
+		!pArrayAlloc ||
+		!pArrayFree ||
+		!pLibVersion ||
+		!pLibOptions ||
+		!pManager )
 	{
 		LOG_ERROR( PLID, "Missing function address for one or more required functions" );
 		return;
 	}
 
-	if( !ParseAddress( pAlloc->GetValue().CStr(), pAlloc->GetKey().CStr(), m_AllocFunc ) ||
-		!ParseAddress( pFree->GetValue().CStr(), pFree->GetKey().CStr(), m_FreeFunc ) ||
-		!ParseAddress( pArrayAlloc->GetValue().CStr(), pArrayAlloc->GetKey().CStr(), m_ArrayAllocFunc ) ||
-		!ParseAddress( pArrayFree->GetValue().CStr(), pArrayFree->GetKey().CStr(), m_ArrayFreeFunc ) ||
-		!ParseAddress( pManager->GetValue().CStr(), pManager->GetKey().CStr(), m_ManagerFunc ) )
+	asGETCONTEXTFN_t contextFunc = nullptr;
+
+	asALLOCFUNC_t allocFunc = nullptr;
+	asFREEFUNC_t freeFunc = nullptr;
+	asALLOCFUNC_t arrayAllocFunc = nullptr;
+	asFREEFUNC_t arrayFreeFunc = nullptr;
+
+	asGETLIBVERSIONFN libVersionFunc = nullptr;
+	asGETLIBOPTIONSFN libOptionsFunc = nullptr;
+
+	if( !ParseAddress( pContext, contextFunc ) ||
+		!ParseAddress( pAlloc, allocFunc ) ||
+		!ParseAddress( pFree, freeFunc ) ||
+		!ParseAddress( pArrayAlloc, arrayAllocFunc ) ||
+		!ParseAddress( pArrayFree, arrayFreeFunc ) ||
+		!ParseAddress( pLibVersion, libVersionFunc ) ||
+		!ParseAddress( pLibOptions, libOptionsFunc ) ||
+		!ParseAddress( pManager, m_ManagerFunc ) )
 	{
 		return;
 	}
@@ -111,34 +137,91 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 	const auto offset = reinterpret_cast<ptrdiff_t>( g_ASMod.GetGameModuleHandle() );
 
 	//Now offset the addresses to their actual address.
-	m_AllocFunc = OffsetAddress( m_AllocFunc, offset );
-	m_FreeFunc = OffsetAddress( m_FreeFunc, offset );
+	m_Environment.SetContextFunc( OffsetAddress( contextFunc, offset ) );
 
-	m_ArrayAllocFunc = OffsetAddress( m_ArrayAllocFunc, offset );
-	m_ArrayFreeFunc = OffsetAddress( m_ArrayFreeFunc, offset );
+	m_Environment.SetLibVersionFunc( OffsetAddress( libVersionFunc, offset ) );
+	m_Environment.SetLibOptionsFunc( OffsetAddress( libOptionsFunc, offset ) );
+
+	m_Environment.SetAllocFunc( OffsetAddress( allocFunc, offset ) );
+	m_Environment.SetFreeFunc( OffsetAddress( freeFunc, offset ) );
+
+	m_Environment.SetArrayAllocFunc( OffsetAddress( arrayAllocFunc, offset ) );
+	m_Environment.SetArrayFreeFunc( OffsetAddress( arrayFreeFunc, offset ) );
 
 	m_ManagerFunc = OffsetAddress( m_ManagerFunc, offset );
 #else
 	//On Linux we can just dlsym what we need.
+	m_Environment.SetContextFunc( reinterpret_cast<asGETCONTEXTFN_t>( dlsym( g_ASMod.GetGameModuleHandle(), "asGetActiveContext" ) ) );
+
+	m_Environment.SetLibVersionFunc( reinterpret_cast<asGETLIBVERSIONFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asGetLibraryVersion" ) ) );
+	m_Environment.SetLibOptionsFunc( reinterpret_cast<asGETLIBOPTIONSFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asGetLibraryOptions" ) ) );
+
 	//These are actually operator new and operator delete
-	m_AllocFunc = reinterpret_cast<asALLOCFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_Znwj" ) );
-	m_FreeFunc = reinterpret_cast<asFREEFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_ZdlPv" ) );
+	m_Environment.SetAllocFunc( reinterpret_cast<asALLOCFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_Znwj" ) ) );
+	m_Environment.SetFreeFunc( reinterpret_cast<asFREEFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_ZdlPv" ) ) );
 	//These are actually operator new[] and operator delete[]
-	m_AllocFunc = reinterpret_cast<asALLOCFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_Znaj" ) );
-	m_FreeFunc = reinterpret_cast<asFREEFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_ZdaPv" ) );
+	m_Environment.SetArrayAllocFunc( reinterpret_cast<asALLOCFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_Znaj" ) ) );
+	m_Environment.SetArrayFreeFunc( reinterpret_cast<asFREEFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_ZdaPv" ) ) );
 
 	m_ManagerFunc = reinterpret_cast<ManagerFunc>( dlsym( g_ASMod.GetGameModuleHandle(), "_ZN16CASServerManager11GetInstanceEv" ) );
 #endif
 
-	if( !m_AllocFunc ||
-		!m_FreeFunc ||
-		!m_ArrayAllocFunc ||
-		!m_ArrayFreeFunc ||
-		!m_ManagerFunc )
+	if( !m_ManagerFunc )
+	{
+		LOG_ERROR( PLID, "Failed to retrieve manager function!" );
+		return;
+	}
+
+	asIScriptEngine* pScriptEngine = nullptr;
+
+	if( !GetScriptEngine( pScriptEngine ) )
+	{
+		LOG_ERROR( PLID, "Failed to retrieve script engine!" );
+		return;
+	}
+
+	m_Environment.SetScriptEngine( pScriptEngine );
+
+	if( !m_Environment.IsValid() )
 	{
 		LOG_ERROR( PLID, "Failed to retrieve one or more required functions" );
 		return;
 	}
+
+	//Parse the version string so we can set the version integer.
+	char szVersion[ 256 ];
+
+	UTIL_SafeStrncpy( szVersion, m_Environment.GetLibVersionFunc()(), sizeof( szVersion ) );
+
+	if( !( *szVersion ) )
+	{
+		LOG_ERROR( PLID, "Couldn't parse Angelscript version out of \"%s\"", szVersion );
+		return;
+	}
+
+	char* pszEnd;
+
+	const long iMajor = strtol( szVersion, &pszEnd, 10 );
+
+	if( !pszEnd || !( *pszEnd ) )
+	{
+		LOG_ERROR( PLID, "Couldn't parse Angelscript version out of \"%s\"", szVersion );
+		return;
+	}
+
+	const long iMinor = strtol( pszEnd + 1, &pszEnd, 10 );
+
+	if( !pszEnd || !( *pszEnd ) )
+	{
+		LOG_ERROR( PLID, "Couldn't parse Angelscript version out of \"%s\"", szVersion );
+		return;
+	}
+
+	const long iPatch = strtol( pszEnd + 1, nullptr, 10 );
+
+	const long iVersion = iMajor * 10000 + iMinor * 100 + iPatch;
+
+	m_Environment.SetLibVersion( static_cast<int>( iVersion ) );
 
 	//Test code for the allocator functions.
 	/*

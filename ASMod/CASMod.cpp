@@ -325,21 +325,13 @@ bool CASMod::SetupEnvironment()
 			return false;
 		}
 
-		asIScriptEngine* pScriptEngine = nullptr;
+		m_Environment = support.GetEnvironment();
 
-		if( !support.GetScriptEngine( pScriptEngine ) )
-		{
-			LOG_ERROR( PLID, "Couldn't get script engine from Sven Co-op, aborting" );
-			return false;
-		}
-
-		m_Environment.SetAllocFunc( support.GetAllocFunc() );
-		m_Environment.SetFreeFunc( support.GetFreeFunc() );
-		m_Environment.SetArrayAllocFunc( support.GetArrayAllocFunc() );
-		m_Environment.SetArrayFreeFunc( support.GetArrayFreeFunc() );
-		m_Environment.SetScriptEngine( pScriptEngine );
-
-		LOG_MESSAGE( PLID, "Acquired Sven Co-op Angelscript engine at %p", pScriptEngine );
+		LOG_MESSAGE( PLID, "Acquired Sven Co-op Angelscript engine at %p\n\tVersion: %s\n\tLibrary options: %s", 
+					 m_Environment.GetScriptEngine(),
+					 m_Environment.GetLibVersionFunc()(),
+					 m_Environment.GetLibOptionsFunc()()
+		);
 
 		bGotEnvironment = true;
 	}

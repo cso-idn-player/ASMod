@@ -44,13 +44,15 @@ static void SQLLogFunc( const char* const pszFormat, ... )
 
 static size_t CalculateThreadCount()
 {
+	/*
 	const unsigned int uiThreads = std::thread::hardware_concurrency();
 
-	//Only use 1 thread for now. - Solokiller
 	if( uiThreads >= 1 )
 		return 1;
+		*/
 
-	return 0;
+	//Only use 1 thread for now. - Solokiller
+	return 1;
 }
 
 CASSQLThreadPool* g_pSQLThreadPool = nullptr;

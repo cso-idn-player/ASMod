@@ -44,6 +44,10 @@ public:
 
 	asGETLIBOPTIONSFN GetLibOptionsFunc() override final { return m_LibOptionsFunc; }
 
+	asATOMICINCFN GetAtomicIncFunc() override final { return m_AtomicIncFunc; }
+
+	asATOMICDECFN GetAtomicDecFunc() override final { return m_AtomicDecFunc; }
+
 	asALLOCFUNC_t GetAllocFunc() override final { return m_AllocFunc; }
 
 	asFREEFUNC_t GetFreeFunc() override final { return m_FreeFunc; }
@@ -77,6 +81,16 @@ public:
 	void SetLibOptionsFunc( asGETLIBOPTIONSFN libOptionsFunc )
 	{
 		m_LibOptionsFunc = libOptionsFunc;
+	}
+
+	void SetAtomicIncFunc( asATOMICINCFN atomicIncFunc )
+	{
+		m_AtomicIncFunc = atomicIncFunc;
+	}
+
+	void SetAtomicDecFunc( asATOMICDECFN atomicDecFunc )
+	{
+		m_AtomicDecFunc = atomicDecFunc;
 	}
 
 	void SetLogger( IASLogger* pLogger )
@@ -115,6 +129,8 @@ public:
 			m_LibVersionFunc &&
 			m_iLibVersion != 0 &&
 			m_LibOptionsFunc &&
+			m_AtomicIncFunc &&
+			m_AtomicDecFunc &&
 			m_AllocFunc && 
 			m_FreeFunc && 
 			m_ArrayAllocFunc && 
@@ -129,6 +145,9 @@ private:
 	asGETLIBVERSIONFN m_LibVersionFunc = asGetLibraryVersion;
 	int m_iLibVersion = ANGELSCRIPT_VERSION;
 	asGETLIBOPTIONSFN m_LibOptionsFunc = asGetLibraryOptions;
+
+	asATOMICINCFN m_AtomicIncFunc = asAtomicInc;
+	asATOMICDECFN m_AtomicDecFunc = asAtomicDec;
 
 	asALLOCFUNC_t m_AllocFunc = nullptr;
 	asFREEFUNC_t m_FreeFunc = nullptr;

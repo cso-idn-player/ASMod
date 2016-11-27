@@ -38,6 +38,9 @@ typedef asIScriptContext* ( *asGETCONTEXTFN_t )();
 typedef const char* ( *asGETLIBVERSIONFN )();
 typedef const char* ( *asGETLIBOPTIONSFN )();
 
+typedef int ( *asATOMICINCFN )( int& value );
+typedef int ( *asATOMICDECFN )( int& value );
+
 /**
 *	Represents an Angelscript environment that can be used as a base by the loader.
 */
@@ -80,6 +83,18 @@ public:
 	*	@see asGetLibraryOptions
 	*/
 	virtual asGETLIBOPTIONSFN GetLibOptionsFunc() = 0;
+
+	/**
+	*	@return The atomic increment function.
+	*	@see asAtomicInc
+	*/
+	virtual asATOMICINCFN GetAtomicIncFunc() = 0;
+
+	/**
+	*	@return The atomic decrement function.
+	*	@see asAtomicDec
+	*/
+	virtual asATOMICDECFN GetAtomicDecFunc() = 0;
 
 	/**
 	*	@return The allocation function.

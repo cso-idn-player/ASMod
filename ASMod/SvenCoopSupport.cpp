@@ -88,23 +88,28 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 
 	auto pContext = pPlatform->FindFirstChild<kv::KV>( "contextFunc" );
 
+	auto pLibVersion = pPlatform->FindFirstChild<kv::KV>( "libVersionFunc" );
+	auto pLibOptions = pPlatform->FindFirstChild<kv::KV>( "libOptionsFunc" );
+
+	auto pAtomicInc = pPlatform->FindFirstChild<kv::KV>( "atomicIncFunc" );
+	auto pAtomicDec = pPlatform->FindFirstChild<kv::KV>( "atomicDecFunc" );
+
 	auto pAlloc = pPlatform->FindFirstChild<kv::KV>( "allocFunc" );
 	auto pFree = pPlatform->FindFirstChild<kv::KV>( "freeFunc" );
 	auto pArrayAlloc = pPlatform->FindFirstChild<kv::KV>( "arrayAllocFunc" );
 	auto pArrayFree = pPlatform->FindFirstChild<kv::KV>( "arrayFreeFunc" );
 
-	auto pLibVersion = pPlatform->FindFirstChild<kv::KV>( "libVersionFunc" );
-	auto pLibOptions = pPlatform->FindFirstChild<kv::KV>( "libOptionsFunc" );
-
 	auto pManager = pPlatform->FindFirstChild<kv::KV>( "managerFunc" );
 
 	if( !pContext ||
+		!pLibVersion ||
+		!pLibOptions ||
+		!pAtomicInc ||
+		!pAtomicDec ||
 		!pAlloc ||
 		!pFree ||
 		!pArrayAlloc ||
 		!pArrayFree ||
-		!pLibVersion ||
-		!pLibOptions ||
 		!pManager )
 	{
 		LOG_ERROR( PLID, "Missing function address for one or more required functions" );
@@ -113,21 +118,26 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 
 	asGETCONTEXTFN_t contextFunc = nullptr;
 
+	asGETLIBVERSIONFN libVersionFunc = nullptr;
+	asGETLIBOPTIONSFN libOptionsFunc = nullptr;
+
+	asATOMICINCFN atomicIncFunc = nullptr;
+	asATOMICDECFN atomicDecFunc = nullptr;
+
 	asALLOCFUNC_t allocFunc = nullptr;
 	asFREEFUNC_t freeFunc = nullptr;
 	asALLOCFUNC_t arrayAllocFunc = nullptr;
 	asFREEFUNC_t arrayFreeFunc = nullptr;
 
-	asGETLIBVERSIONFN libVersionFunc = nullptr;
-	asGETLIBOPTIONSFN libOptionsFunc = nullptr;
-
 	if( !ParseAddress( pContext, contextFunc ) ||
+		!ParseAddress( pLibVersion, libVersionFunc ) ||
+		!ParseAddress( pLibOptions, libOptionsFunc ) ||
+		!ParseAddress( pAtomicInc, atomicIncFunc ) ||
+		!ParseAddress( pAtomicDec, atomicDecFunc ) ||
 		!ParseAddress( pAlloc, allocFunc ) ||
 		!ParseAddress( pFree, freeFunc ) ||
 		!ParseAddress( pArrayAlloc, arrayAllocFunc ) ||
 		!ParseAddress( pArrayFree, arrayFreeFunc ) ||
-		!ParseAddress( pLibVersion, libVersionFunc ) ||
-		!ParseAddress( pLibOptions, libOptionsFunc ) ||
 		!ParseAddress( pManager, m_ManagerFunc ) )
 	{
 		return;
@@ -142,6 +152,9 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 	m_Environment.SetLibVersionFunc( OffsetAddress( libVersionFunc, offset ) );
 	m_Environment.SetLibOptionsFunc( OffsetAddress( libOptionsFunc, offset ) );
 
+	m_Environment.SetAtomicIncFunc( OffsetAddress( atomicIncFunc, offset ) );
+	m_Environment.SetAtomicDecFunc( OffsetAddress( atomicDecFunc, offset ) );
+
 	m_Environment.SetAllocFunc( OffsetAddress( allocFunc, offset ) );
 	m_Environment.SetFreeFunc( OffsetAddress( freeFunc, offset ) );
 
@@ -155,6 +168,9 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 
 	m_Environment.SetLibVersionFunc( reinterpret_cast<asGETLIBVERSIONFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asGetLibraryVersion" ) ) );
 	m_Environment.SetLibOptionsFunc( reinterpret_cast<asGETLIBOPTIONSFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asGetLibraryOptions" ) ) );
+
+	m_Environment.SetAtomicIncFunc( reinterpret_cast<asATOMICINCFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asAtomicInc" ) ) );
+	m_Environment.SetAtomicDecFunc( reinterpret_cast<asATOMICDECFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asAtomicDec" ) ) );
 
 	//These are actually operator new and operator delete
 	m_Environment.SetAllocFunc( reinterpret_cast<asALLOCFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_Znwj" ) ) );

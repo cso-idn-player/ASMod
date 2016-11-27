@@ -98,7 +98,7 @@ CASDirectory* CASDirectoryList::CreateDirectory( const char* const pszPath, cons
 {
 	if( CASDirectory* pDirectory = FindDirectory( pszPath ) )
 	{
-		g_pModule->GetEnvironment().GetLogger()->Critical( "CASDirectoryList::CreateDirectory: Directory '%s' already exists!\n", pszPath );
+		as::Critical( "CASDirectoryList::CreateDirectory: Directory '%s' already exists!\n", pszPath );
 		return pDirectory;
 	}
 
@@ -127,7 +127,7 @@ CASDirectory* CASDirectoryList::CreateDirectory( const char* const pszPath, cons
 
 		if( bTruncated )
 		{
-			g_pModule->GetEnvironment().GetLogger()->Critical( "CASDirectoryList::CreateDirectory: Could not find a suitable parent for '%s'!\n", szPath.c_str() );
+			as::Critical( "CASDirectoryList::CreateDirectory: Could not find a suitable parent for '%s'!\n", szPath.c_str() );
 			return nullptr;
 		}
 	}
@@ -143,7 +143,7 @@ CASDirectory* CASDirectoryList::CreateDirectory( const char* const pszPath, cons
 	if( !( *pPath->GetName() ) )
 	{
 		delete pPath;
-		g_pModule->GetEnvironment().GetLogger()->Critical( "CASDirectoryList::CreateDirectory: Name too long for directory '%s'!\n", szPath.c_str() );
+		as::Critical( "CASDirectoryList::CreateDirectory: Name too long for directory '%s'!\n", szPath.c_str() );
 		return nullptr;
 	}
 
@@ -216,8 +216,7 @@ struct CClearTempDirectories
 	{
 		if( pDirectory->IsTemporary() )
 		{
-			//TODO: make the logger more easily available. - Solokiller
-			g_pModule->GetEnvironment().GetLogger()->Diagnostic( "Clearing temporary directory '%s'\n", pszPath );
+			as::Diagnostic( "Clearing temporary directory '%s'\n", pszPath );
 
 			//TODO: the SteamPipe filesystem doesn't need the gamedir - Solokiller
 			for( auto entry : std::experimental::filesystem::directory_iterator( std::string( gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR ) ) + '/' + pszPath ) )

@@ -3,10 +3,7 @@
 
 #include "StringUtils.h"
 
-#include "ASMod/Module/CASModBaseModule.h"
-#include "Module.h"
-#include "ASMod/IASEnvironment.h"
-#include <Angelscript/util/IASLogger.h>
+#include <Angelscript/util/ASLogging.h>
 
 #include "ASFileSystemConstants.h"
 #include "CASDirectory.h"
@@ -113,7 +110,7 @@ bool EnumerateDirectories( FUNCTOR& callback, size_t& uiDepth, const CASDirector
 
 	if( !UTIL_SafeStrnCat( pszCursor, pDirectory->GetName(), uiBufferSize ) )
 	{
-		g_pModule->GetEnvironment().GetLogger()->Critical( "CASDirectoryList::ClearTempDirectories: Failed to append name '%s'!\n", pDirectory->GetName() );
+		as::Critical( "EnumerateDirectories: Failed to append name '%s'!\n", pDirectory->GetName() );
 		return false;
 	}
 
@@ -123,7 +120,7 @@ bool EnumerateDirectories( FUNCTOR& callback, size_t& uiDepth, const CASDirector
 
 	if( uiBufferSize < uiLength + 1 )
 	{
-		g_pModule->GetEnvironment().GetLogger()->Critical( "CASDirectoryList::ClearTempDirectories: Failed to append directory separator!\n" );
+		as::Critical( "EnumerateDirectories: Failed to append directory separator!\n" );
 		return false;
 	}
 

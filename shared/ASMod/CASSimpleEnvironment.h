@@ -56,7 +56,7 @@ public:
 
 	asFREEFUNC_t GetArrayFreeFunc() override final { return m_ArrayFreeFunc; }
 
-	IASLogger* GetLogger() override final { return m_pLogger; }
+	IASLogger* GetLogger() override final { return m_Logger; }
 
 	void SetScriptEngine( asIScriptEngine* pScriptEngine )
 	{
@@ -95,7 +95,7 @@ public:
 
 	void SetLogger( IASLogger* pLogger )
 	{
-		m_pLogger = pLogger;
+		m_Logger = pLogger;
 	}
 
 	void SetAllocFunc( asALLOCFUNC_t allocFunc )
@@ -154,7 +154,7 @@ private:
 	asALLOCFUNC_t m_ArrayAllocFunc = nullptr;
 	asFREEFUNC_t m_ArrayFreeFunc = nullptr;
 
-	IASLogger* m_pLogger = nullptr;
+	CASRefPtr<IASLogger> m_Logger;
 };
 
 inline CASSimpleEnvironment::CASSimpleEnvironment( asIScriptEngine* pScriptEngine, 
@@ -168,7 +168,7 @@ inline CASSimpleEnvironment::CASSimpleEnvironment( asIScriptEngine* pScriptEngin
 	, m_FreeFunc( freeFunc )
 	, m_ArrayAllocFunc( arrayAllocFunc )
 	, m_ArrayFreeFunc( arrayFreeFunc )
-	, m_pLogger( pLogger )
+	, m_Logger( pLogger )
 {
 }
 
@@ -179,7 +179,7 @@ inline CASSimpleEnvironment::CASSimpleEnvironment( IASEnvironment& environment )
 	, m_FreeFunc( environment.GetFreeFunc() )
 	, m_ArrayAllocFunc( environment.GetArrayAllocFunc() )
 	, m_ArrayFreeFunc( environment.GetArrayFreeFunc() )
-	, m_pLogger( environment.GetLogger() )
+	, m_Logger( environment.GetLogger() )
 {
 }
 

@@ -3,11 +3,7 @@
 #include <extdll.h>
 #include <meta_api.h>
 
-#include <Angelscript/util/IASLogger.h>
-
-#include "ASMod/Module/CASModBaseModule.h"
-#include "Module.h"
-#include "ASMod/IASEnvironment.h"
+#include <Angelscript/util/ASLogging.h>
 
 #include "StringUtils.h"
 
@@ -74,7 +70,7 @@ void ASFileSystemUtils::CreateDirectory( const char* const pszDirectory )
 
 	if( !PrintfSuccess( result, sizeof( szPath ) ) )
 	{
-		g_pModule->GetEnvironment().GetLogger()->Critical( "ASFileSystemUtils::CreateDirectory: Couldn't create directory \"%s\", path too long!\n", pszDirectory );
+		as::Critical( "ASFileSystemUtils::CreateDirectory: Couldn't create directory \"%s\", path too long!\n", pszDirectory );
 		return;
 	}
 
@@ -106,7 +102,7 @@ void ASFileSystemUtils::RemoveFile( const char* const pszFilename )
 
 	if( !PrintfSuccess( result, sizeof( szPath ) ) )
 	{
-		g_pModule->GetEnvironment().GetLogger()->Critical( "ASFileSystemUtils::RemoveFile: Couldn't remove file \"%s\", filename too long!\n", pszFilename );
+		as::Critical( "ASFileSystemUtils::RemoveFile: Couldn't remove file \"%s\", filename too long!\n", pszFilename );
 		return;
 	}
 

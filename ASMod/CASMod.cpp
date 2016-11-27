@@ -89,16 +89,10 @@ void CASMod::Shutdown()
 
 	UnloadModules();
 
-	if( m_pLogger )
+	if( m_Logger )
 	{
-		if( m_bUsingLocalLogger )
-		{
-			//TODO: need to make loggers reference counted.
-			as::SetLogger( nullptr );
-			m_bUsingLocalLogger = false;
-		}
-
-		m_pLogger = nullptr;
+		as::SetLogger( nullptr );
+		m_Logger.Reset();
 	}
 
 	if( UsingLocalEnvironment() )
@@ -111,10 +105,11 @@ void CASMod::Shutdown()
 			pEngine->ShutDownAndRelease();
 		}
 
-		m_Environment = std::move( CASSimpleEnvironment() );
-
 		m_bUsingLocalEnvironment = false;
 	}
+
+	//Reset the environment to release any ref counted objects.
+	m_Environment = std::move( CASSimpleEnvironment() );
 
 	if( m_hGame != nullptr )
 	{
@@ -276,13 +271,11 @@ bool CASMod::SetupEnvironment()
 
 	bool bGotEnvironment = false;
 
-	if( m_pLogger )
+	if( m_Logger )
 	{
 		as::SetLogger( nullptr );
-		m_pLogger = nullptr;
+		m_Logger.Reset();
 	}
-
-	m_bUsingLocalLogger = false;
 
 	if( m_EnvType == EnvType::DEFAULT )
 	{
@@ -359,10 +352,10 @@ bool CASMod::SetupEnvironment()
 		m_bUsingLocalEnvironment = true;
 	}
 
-	m_pLogger = m_Environment.GetLogger();
+	m_Logger = m_Environment.GetLogger();
 
 	//Provide a logger if the game didn't.
-	if( !m_pLogger )
+	if( !m_Logger )
 	{
 		char szLogPath[ PATH_MAX ];
 
@@ -374,12 +367,12 @@ bool CASMod::SetupEnvironment()
 			UTIL_SafeStrncpy( szLogPath, "logs/LASMod", sizeof( szLogPath ) );
 		}
 
-		m_pLogger = new CASFileLogger( szLogPath, CASFileLogger::Flag::USE_DATESTAMP | CASFileLogger::Flag::USE_TIMESTAMP | CASFileLogger::Flag::OUTPUT_LOG_LEVEL );
+		m_Logger.Set( new CASFileLogger( szLogPath, CASFileLogger::Flag::USE_DATESTAMP | CASFileLogger::Flag::USE_TIMESTAMP | CASFileLogger::Flag::OUTPUT_LOG_LEVEL ), true );
 
-		m_bUsingLocalLogger = true;
-
-		m_Environment.SetLogger( m_pLogger );
+		m_Environment.SetLogger( m_Logger );
 	}
+
+	as::SetLogger( m_Logger );
 
 	return m_Environment.IsValid();
 }

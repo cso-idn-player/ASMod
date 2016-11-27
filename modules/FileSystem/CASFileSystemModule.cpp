@@ -3,7 +3,7 @@
 
 #include "interface.h"
 
-#include <Angelscript/util/IASLogger.h>
+#include <Angelscript/util/ASLogging.h>
 
 #include "ASMod/IASEnvironment.h"
 
@@ -29,7 +29,7 @@ bool CASFileSystemModule::Initialize( const CreateInterfaceFn* pFactories, const
 	if( !BaseClass::Initialize( pFactories, uiNumFactories ) )
 		return false;
 
-	GetEnvironment().GetLogger()->Diagnostic( "Registering FileSystem API\n" );
+	as::Diagnostic( "Registering FileSystem API\n" );
 
 	auto& scriptEngine = *GetEnvironment().GetScriptEngine();
 
@@ -42,7 +42,7 @@ bool CASFileSystemModule::Initialize( const CreateInterfaceFn* pFactories, const
 	SetupDirectoryAccess( *g_pASFileSystem );
 
 	//Clear temporary directories now.
-	GetEnvironment().GetLogger()->Diagnostic( "Clearing temporary directories\n" );
+	as::Diagnostic( "Clearing temporary directories\n" );
 	g_pASFileSystem->GetDirectoryList().ClearTemporaryDirectories();
 
 	FileSystem_RegisterConCommands();
@@ -54,7 +54,7 @@ bool CASFileSystemModule::Initialize( const CreateInterfaceFn* pFactories, const
 
 bool CASFileSystemModule::Shutdown()
 {
-	GetEnvironment().GetLogger()->Diagnostic( "Clearing temporary directories\n" );
+	as::Diagnostic( "Clearing temporary directories\n" );
 
 	g_pASFileSystem->GetDirectoryList().ClearTemporaryDirectories();
 

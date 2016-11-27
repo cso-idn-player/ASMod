@@ -3,7 +3,7 @@
 
 #include "interface.h"
 
-#include <Angelscript/util/IASLogger.h>
+#include <Angelscript/util/ASLogging.h>
 
 #include "ASMod/IASEnvironment.h"
 
@@ -23,7 +23,7 @@ bool CASSCInteropModule::Initialize( const CreateInterfaceFn* pFactories, const 
 	if( !BaseClass::Initialize( pFactories, uiNumFactories ) )
 		return false;
 
-	GetEnvironment().GetLogger()->Diagnostic( "Registering Sven Co-op interop features\n" );
+	as::Diagnostic( "Registering Sven Co-op interop features\n" );
 
 	auto& scriptEngine = *GetEnvironment().GetScriptEngine();
 

@@ -7,12 +7,10 @@
 #include <extdll.h>
 #include <meta_api.h>
 
-#include <Angelscript/util/IASLogger.h>
+#include <Angelscript/util/ASLogging.h>
 
 #include "Platform.h"
 
-#include "ASMod/Module/CASModBaseModule.h"
-#include "ASMod/IASEnvironment.h"
 #include "Module.h"
 
 #include "ASFileSystemUtils.h"
@@ -33,7 +31,7 @@ CASFile::CASFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFla
 
 	if( ASFileSystem_LogFileAccess() )
 	{
-		g_pModule->GetEnvironment().GetLogger()->Diagnostic( "File \"%s\" opened\n", pszFilename );
+		as::Diagnostic( "File \"%s\" opened\n", pszFilename );
 	}
 }
 
@@ -54,7 +52,7 @@ void CASFile::Close()
 	{
 		if( ASFileSystem_LogFileAccess() )
 		{
-			g_pModule->GetEnvironment().GetLogger()->Diagnostic( "File \"%s\" closed\n", m_szFilename.c_str() );
+			as::Diagnostic( "File \"%s\" closed\n", m_szFilename.c_str() );
 		}
 
 		fclose( m_pFile );

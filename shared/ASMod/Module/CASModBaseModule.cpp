@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include <Angelscript/util/IASLogger.h>
+#include <Angelscript/util/ASLogging.h>
 
 #include <extdll.h>
 #include <meta_api.h>
@@ -33,6 +33,9 @@ bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const si
 
 	g_pASEnv = m_pEnvironment = &m_pASMod->GetEnvironment();
 
+	//Install the logger.
+	as::SetLogger( m_pEnvironment->GetLogger() );
+
 	SetMemAllocFuncs(
 		m_pEnvironment->GetAllocFunc(), m_pEnvironment->GetFreeFunc(),
 		m_pEnvironment->GetArrayAllocFunc(), m_pEnvironment->GetArrayFreeFunc() );
@@ -41,7 +44,7 @@ bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const si
 
 	if( !pEngFuncs )
 	{
-		GetEnvironment().GetLogger()->Critical( "Couldn't get engine functions \"%s\" from ASMod!\n", ENGINEFUNCS_T_NAME );
+		as::Critical( "Couldn't get engine functions \"%s\" from ASMod!\n", ENGINEFUNCS_T_NAME );
 		return false;
 	}
 
@@ -57,7 +60,7 @@ bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const si
 
 	if( !gpGlobals || !gpMetaGlobals || !gpGamedllFuncs || !gpMetaUtilFuncs )
 	{
-		GetEnvironment().GetLogger()->Critical( "Couldn't get one or more interfaces from ASMod!\n" );
+		as::Critical( "Couldn't get one or more interfaces from ASMod!\n" );
 		return false;
 	}
 
@@ -75,6 +78,8 @@ bool CASModBaseModule::Shutdown()
 	SetMemAllocFuncs(
 		nullptr, nullptr,
 		nullptr, nullptr );
+
+	as::SetLogger( nullptr );
 
 	g_pASEnv = m_pEnvironment = nullptr;
 

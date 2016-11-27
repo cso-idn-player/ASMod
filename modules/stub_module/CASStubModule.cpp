@@ -3,9 +3,7 @@
 
 #include "interface.h"
 
-#include <Angelscript/util/IASLogger.h>
-
-#include "ASMod/IASEnvironment.h"
+#include <Angelscript/util/ASLogging.h>
 
 #include "CASStubModule.h"
 
@@ -21,14 +19,14 @@ bool CASStubModule::Initialize( const CreateInterfaceFn* pFactories, const size_
 	if( !BaseClass::Initialize( pFactories, uiNumFactories ) )
 		return false;
 
-	m_pEnvironment->GetLogger()->Diagnostic( "Initializing module\n" );
+	as::Diagnostic( "Initializing module\n" );
 
 	return true;
 }
 
 bool CASStubModule::Shutdown()
 {
-	m_pEnvironment->GetLogger()->Diagnostic( "Shutting down module\n" );
+	as::Diagnostic( "Shutting down module\n" );
 
 	return BaseClass::Shutdown();
 }

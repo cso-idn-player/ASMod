@@ -133,9 +133,7 @@ private:
 
 	CASSimpleEnvironment m_Environment;
 
-	IASLogger* m_pLogger = nullptr;
-
-	bool m_bUsingLocalLogger = false;
+	CASRefPtr<IASLogger> m_Logger;
 
 	Modules_t m_Modules;
 

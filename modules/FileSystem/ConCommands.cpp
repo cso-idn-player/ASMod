@@ -1,17 +1,15 @@
 #include <extdll.h>
 #include <meta_api.h>
 
-#include <Angelscript/util/IASLogger.h>
+#include <Angelscript/util/ASLogging.h>
 
 #include "keyvalues/Keyvalues.h"
 
 #include "ScriptAPI/CASDirectory.h"
 
-#include "ASMod/Module/CASModBaseModule.h"
-#include "Module.h"
-#include "ASMod/IASEnvironment.h"
-
 #include "ScriptAPI/CASVirtualFileSystem.h"
+
+#include "Module.h"
 
 #include "ConCommands.h"
 
@@ -92,7 +90,7 @@ void DumpFileSystem()
 {
 	if( CMD_ARGC() != 2 && CMD_ARGC() != 3 )
 	{
-		g_pModule->GetEnvironment().GetLogger()->Msg( "asmod_fs_dumpfilesystem usage: asmod_fs_dumpfilesystem <filename> [outputExtraInfo]\n" );
+		as::Msg( "asmod_fs_dumpfilesystem usage: asmod_fs_dumpfilesystem <filename> [outputExtraInfo]\n" );
 		return;
 	}
 
@@ -106,7 +104,7 @@ void DumpFileSystem()
 
 	if( !PrintfSuccess( result, sizeof szBuffer ) )
 	{
-		g_pModule->GetEnvironment().GetLogger()->Critical( "Filename too long!\n" );
+		as::Critical( "Filename too long!\n" );
 		return;
 	}
 
@@ -142,9 +140,9 @@ void DumpFileSystem()
 	}
 
 	if( !writer.IsOpen() || writer.ErrorOccurred() )
-		g_pModule->GetEnvironment().GetLogger()->Critical( "An error occurred while writing filesystem to file '%s'\n", szBuffer );
+		as::Critical( "An error occurred while writing filesystem to file '%s'\n", szBuffer );
 	else
-		g_pModule->GetEnvironment().GetLogger()->Msg( "Written filesystem to file '%s'\n", writer.GetFilename() );
+		as::Msg( "Written filesystem to file '%s'\n", writer.GetFilename() );
 }
 
 void FileSystem_RegisterConCommands()

@@ -4,6 +4,8 @@
 
 #include <angelscript.h>
 
+#include <Angelscript/util/ASLogging.h>
+
 #include <Angelscript/ScriptAPI/ASCDateTime.h>
 #include <Angelscript/ScriptAPI/ASCTime.h>
 
@@ -33,23 +35,11 @@
 
 static void SQLLogFunc( const char* const pszFormat, ... )
 {
-	char szBuffer[ 4096 ];
-
 	va_list list;
 
 	va_start( list, pszFormat );
-	const int iResult = vsnprintf( szBuffer, sizeof( szBuffer ), pszFormat, list );
+	as::VCritical( pszFormat, list );
 	va_end( list );
-
-	if( iResult >= 0 || static_cast<size_t>( iResult ) < sizeof( szBuffer ) )
-	{
-		LOG_MESSAGE( PLID, "SQL: %s", szBuffer );
-	}
-	else
-	{
-		ASSERT( false );
-		LOG_MESSAGE( PLID, "SQL: Log formatting failed\n" );
-	}
 }
 
 static size_t CalculateThreadCount()
@@ -69,7 +59,7 @@ static CASSQLiteConnection* HLCreateSQLiteConnection( const std::string& szDatab
 {
 	if( szDatabase.empty() )
 	{
-		LOG_ERROR( PLID, "SQL::CreateSQLiteConnection: Empty database name!\n" );
+		as::Critical( "SQL::CreateSQLiteConnection: Empty database name!\n" );
 		return nullptr;
 	}
 
@@ -82,7 +72,7 @@ static CASSQLiteConnection* HLCreateSQLiteConnection( const std::string& szDatab
 
 	if( !pszGameDir )
 	{
-		LOG_ERROR( PLID, "SQL::CreateSQLiteConnection: Failed to get game directory!\n" );
+		as::Critical( "SQL::CreateSQLiteConnection: Failed to get game directory!\n" );
 		return nullptr;
 	}
 
@@ -90,7 +80,7 @@ static CASSQLiteConnection* HLCreateSQLiteConnection( const std::string& szDatab
 	
 	if( iResult < 0 || static_cast<size_t>( iResult ) >= sizeof( szFilename ) )
 	{
-		LOG_ERROR( PLID, "SQL::CreateSQLiteConnection: Failed to format database \"%s\" filename!\n", szDatabase.c_str() );
+		as::Critical( "SQL::CreateSQLiteConnection: Failed to format database \"%s\" filename!\n", szDatabase.c_str() );
 		return nullptr;
 	}
 
@@ -135,7 +125,7 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 
 	if( !( *pszConfigFile ) )
 	{
-		LOG_MESSAGE( PLID, "SQL::CreateMySQLConnectionWithDefaults: No config file specified; cannot create connection\n" );
+		as::Critical( "SQL::CreateMySQLConnectionWithDefaults: No config file specified; cannot create connection\n" );
 		return nullptr;
 	}
 
@@ -147,7 +137,7 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 
 	if( !PrintfSuccess( result, sizeof( szPath ) ) )
 	{
-		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: Error while formatting config filename\n" );
+		as::Critical( "SQL::CreateMySQLConnectionWithDefaults: Error while formatting config filename\n" );
 		return nullptr;
 	}
 
@@ -155,7 +145,7 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 
 	if( !parser.HasInputData() )
 	{
-		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: Couldn't open config file \"%s\"!\n", pszConfigFile );
+		as::Critical( "SQL::CreateMySQLConnectionWithDefaults: Couldn't open config file \"%s\"!\n", pszConfigFile );
 		return nullptr;
 	}
 
@@ -165,7 +155,7 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 
 	if( parseResult != kv::Parser::ParseResult::SUCCESS )
 	{
-		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: Error while parsing config file \"%s\": %s\n", kv::Parser::ParseResultToString( parseResult ) );
+		as::Critical( "SQL::CreateMySQLConnectionWithDefaults: Error while parsing config file \"%s\": %s\n", kv::Parser::ParseResultToString( parseResult ) );
 		return nullptr;
 	}
 
@@ -173,7 +163,7 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 
 	if( !pConnection )
 	{
-		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: No connection data found\n" );
+		as::Critical( "SQL::CreateMySQLConnectionWithDefaults: No connection data found\n" );
 		return nullptr;
 	}
 
@@ -185,19 +175,19 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 
 	if( !pHost )
 	{
-		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: Missing value for key \"host\"\n" );
+		as::Critical( "SQL::CreateMySQLConnectionWithDefaults: Missing value for key \"host\"\n" );
 		bHasAllValues = false;
 	}
 
 	if( !pUser )
 	{
-		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: Missing value for key \"user\"\n" );
+		as::Critical( "SQL::CreateMySQLConnectionWithDefaults: Missing value for key \"user\"\n" );
 		bHasAllValues = false;
 	}
 
 	if( !pPass )
 	{
-		LOG_ERROR( PLID, "SQL::CreateMySQLConnectionWithDefaults: Missing value for key \"pass\"\n" );
+		as::Critical( "SQL::CreateMySQLConnectionWithDefaults: Missing value for key \"pass\"\n" );
 		bHasAllValues = false;
 	}
 
@@ -216,10 +206,10 @@ void RegisterScriptHLSQL( asIScriptEngine& engine )
 	g_pSQLThreadPool = new CASSQLThreadPool( CalculateThreadCount(), &::SQLLogFunc );
 
 	//Call an SQLite function to load the library. - Solokiller
-	LOG_MESSAGE( PLID, "SQLite library version: %s\n", sqlite3_libversion() );
+	as::Msg( "SQLite library version: %s\n", sqlite3_libversion() );
 
 	//Call a MySQL function to load the library. - Solokiller
-	LOG_MESSAGE( PLID, "MariaDB library version: %s\n", mysql_get_client_info() );
+	as::Msg( "MariaDB library version: %s\n", mysql_get_client_info() );
 
 	RegisterScriptCTime( engine );
 	RegisterScriptCDateTime( engine );

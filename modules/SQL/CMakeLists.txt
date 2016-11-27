@@ -126,8 +126,7 @@ create_source_groups( "${CMAKE_SOURCE_DIR}" )
 clear_sources()
 
 #Make the bin directory if it doesn't exist.
-#Must be done before the commands below, so PRE_BUILD is used since CMake reorders the commands on Linux.
-add_custom_command( TARGET ${MODULE_NAME} PRE_BUILD
+add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${META_BIN_DIRECTORY}
 )
 
@@ -154,14 +153,14 @@ if( WIN32 )
 	)
 else()
 	#Copy the sqlite3 library so the exe can get to it
-	add_custom_command( TARGET ${MODULE_NAME} PRE_BUILD
+	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/SQLite/lib/libsqlite3.so"
 		"${META_BIN_DIRECTORY}"
 	)
 
 	#Copy the mariadb library so the exe can get to it
-	add_custom_command( TARGET ${MODULE_NAME} PRE_BUILD
+	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/MariaDB/lib/libmariadb.so.2"
 		"${META_BIN_DIRECTORY}"

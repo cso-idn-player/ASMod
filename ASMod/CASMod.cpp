@@ -249,6 +249,7 @@ void CASMod::ApplyConfig( kv::Block& block )
 	//Clear any leftover settings.
 	m_EnvType = EnvType::DEFAULT;
 	memset( m_szPluginFallbackPath, 0, sizeof( m_szPluginFallbackPath ) );
+	m_PluginHeaders.clear();
 
 	auto pLoader = block.FindFirstChild<kv::Block>( "loader" );
 
@@ -285,6 +286,17 @@ void CASMod::ApplyConfig( kv::Block& block )
 					LOG_MESSAGE( PLID, "Using Plugin fallback path \"%s\"", m_szPluginFallbackPath );
 				else
 					LOG_ERROR( PLID, "Plugin fallback path \"%s\" is too long!", pPluginFallbackPath->GetValue().CStr() );
+			}
+
+			for( auto pHeader : pCurrentGame->GetChildrenByKey( "header" ) )
+			{
+				if( pHeader->GetType() != kv::NodeType::KEYVALUE )
+				{
+					LOG_MESSAGE( PLID, "game.currentgame.header must be a keyvalue!" );
+					continue;
+				}
+
+				m_PluginHeaders.emplace_back( static_cast<kv::KV*>( pHeader )->GetValue().CStr() );
 			}
 		}
 	}

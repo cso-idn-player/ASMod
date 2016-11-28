@@ -126,7 +126,7 @@ bool CASMod::LoadPluginFromBlock( kv::Block& block )
 
 bool CASMod::LoadPlugin( const char* const pszPluginName, const char* const pszScriptName )
 {
-	CASPluginBuilder builder( pszPluginName, pszScriptName, m_szPluginFallbackPath );
+	CASPluginBuilder builder( pszPluginName, pszScriptName, m_PluginHeaders, m_szPluginFallbackPath );
 
 	auto pModule = m_PluginManager->BuildModule( *m_pPluginDescriptor, pszPluginName, builder );
 

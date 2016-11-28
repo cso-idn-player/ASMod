@@ -27,6 +27,7 @@
 #define ASMOD_MODULES_DIR "modules"
 #define ASMOD_MODULES_FILENAME "Modules.txt"
 #define ASMOD_PLUGINS_DIR "plugins"
+#define ASMOD_HEADERS_DIR "headers"
 #define ASMOD_CFG_PLUGINS ASMOD_CFG_DIR "Plugins.txt"
 
 #define ASMOD_SCSUPPORT_FILENAME "SvenCoopSupport.txt"
@@ -217,6 +218,8 @@ private:
 	const CASModuleDescriptor* m_pPluginDescriptor = nullptr;
 
 	char m_szPluginFallbackPath[ PATH_MAX ] = {};
+
+	std::vector<std::string> m_PluginHeaders;
 
 	bool m_bFullyInitialized = false;
 

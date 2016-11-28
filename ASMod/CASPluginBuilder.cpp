@@ -18,9 +18,12 @@
 
 namespace fs = std::experimental::filesystem;
 
-CASPluginBuilder::CASPluginBuilder( const char* const pszPluginName, const char* const pszScriptName, const char* const pszFallbackPath )
+CASPluginBuilder::CASPluginBuilder( const char* const pszPluginName, const char* const pszScriptName, 
+									const Scripts_t& headers,
+									const char* const pszFallbackPath )
 	: m_pszPluginName( pszPluginName )
 	, m_pszFallbackPath( pszFallbackPath )
+	, m_Headers( headers )
 {
 	assert( pszPluginName );
 	assert( pszScriptName );
@@ -42,6 +45,24 @@ bool CASPluginBuilder::AddScripts( CScriptBuilder& builder )
 	//Reuse the memory for script files so we don't allocate a bunch of times.
 	std::string szFilename;
 	std::vector<char> buffer;
+
+	for( const auto& szScript : m_Headers )
+	{
+		szFilename = szScript;
+		UTIL_FixSlashes( &szFilename[ 0 ] );
+		UTIL_DefaultExtension( szFilename, ASMOD_SCRIPT_EXTENSION );
+
+		LOG_DEVELOPER( PLID, "Adding header \"%s\"", szFilename.c_str() );
+
+		if( LoadScriptFile( szFilename.c_str(), buffer, ScriptType::HEADER ) )
+		{
+			bSuccess = builder.AddSectionFromMemory( szFilename.c_str(), buffer.data(), buffer.size() - 1 ) >= 0 && bSuccess;
+		}
+		else
+		{
+			bSuccess = false;
+		}
+	}
 
 	for( const auto& szScript : m_Scripts )
 	{
@@ -112,12 +133,25 @@ bool CASPluginBuilder::IncludeScript( CScriptBuilder& builder,
 	return bSuccess;
 }
 
-bool CASPluginBuilder::LoadScriptFile( const char* const pszFilename, std::vector<char>& buffer )
+bool CASPluginBuilder::LoadScriptFile( const char* const pszFilename, std::vector<char>& buffer, const ScriptType type )
 {
+	//First try our own plugin directory.
+	const char* pszDirectory;
+
+	switch( type )
+	{
+	case ScriptType::NORMAL:	pszDirectory = ASMOD_PLUGINS_DIR; break;
+	case ScriptType::HEADER:	pszDirectory = ASMOD_HEADERS_DIR; break;
+	default:
+		{
+			LOG_ERROR( PLID, "Unknown script type %d\n", type );
+			return false;
+		}
+	}
+
 	char szFilename[ PATH_MAX ];
 
-	//First try our own plugin directory.
-	auto result = snprintf( szFilename, sizeof( szFilename ), "%s/%s/%s", ASMOD_BASE_DIR, ASMOD_PLUGINS_DIR, pszFilename );
+	auto result = snprintf( szFilename, sizeof( szFilename ), "%s/%s/%s", ASMOD_BASE_DIR, pszDirectory, pszFilename );
 
 	if( !PrintfSuccess( result, sizeof( szFilename ) ) )
 	{
@@ -128,7 +162,7 @@ bool CASPluginBuilder::LoadScriptFile( const char* const pszFilename, std::vecto
 	FileHandle_t hFile = g_pFileSystem->Open( szFilename, "rb" );
 
 	//User provided a fallback directory for the current game, try loading from there.
-	if( hFile == FILESYSTEM_INVALID_HANDLE && *m_pszFallbackPath )
+	if( hFile == FILESYSTEM_INVALID_HANDLE && type == ScriptType::NORMAL && *m_pszFallbackPath )
 	{
 		result = snprintf( szFilename, sizeof( szFilename ), "%s/%s", m_pszFallbackPath, pszFilename );
 

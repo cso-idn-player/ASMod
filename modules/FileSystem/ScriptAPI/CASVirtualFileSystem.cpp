@@ -118,7 +118,10 @@ void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
 
 	//Write access is required to remove files.
 	if( !( m_AllowedAccess & FileAccessBit::WRITE ) )
+	{
+		as::Verbose( "Access denied for \"%s\": Global access setting forbids access\n", pszFilename );
 		return;
+	}
 
 	std::string szFilename( pszFilename );
 
@@ -132,9 +135,17 @@ void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
 	{
 		szPath = szFilename.substr( 0, uiSlash );
 	}
+	else
+	{
+		as::Verbose( "Access denied for \"%s\": Files in the root directory cannot be removed\n", pszFilename );
+		return;
+	}
 
 	if( szPath.empty() )
+	{
+		as::Verbose( "Access denied for \"%s\": No path component\n", pszFilename );
 		return;
+	}
 
 	//Need to have permission to access this directory.
 	if( !m_DirectoryList.CanAccessDirectory( pszFilename, szPath.c_str(), FileAccessBit::WRITE ) )
@@ -145,9 +156,20 @@ void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
 
 	std::error_code error;
 
-	//Cannot delete directories.
-	if( std::experimental::filesystem::is_directory( szActualFilename, error ) || error )
+	const bool bIsDirectory = std::experimental::filesystem::is_directory( szActualFilename, error );
+
+	if( error )
+	{
+		as::Verbose( "Access denied for \"%s\": Internal error while checking if file is a directory\n", pszFilename );
 		return;
+	}
+
+	//Cannot delete directories.
+	if( bIsDirectory )
+	{
+		as::Verbose( "Access denied for \"%s\": Cannot remove directories\n", pszFilename );
+		return;
+	}
 
 	std::experimental::filesystem::remove( szActualFilename );
 }

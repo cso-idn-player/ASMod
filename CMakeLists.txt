@@ -311,6 +311,7 @@ elseif( UNIX )
 	set( SHARED_DEFINITIONS
 		${SHARED_DEFINITIONS}
 		linux
+		LINUX
 	)
 	
 endif()

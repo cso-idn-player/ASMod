@@ -151,7 +151,8 @@ bool CASMod::LoadModuleFromBlock( kv::Block& block )
 	//We might add in factories from other libraries in the future, so use an array here.
 	const CreateInterfaceFn factories[] =
 	{
-		Sys_GetFactoryThis()
+		Sys_GetFactoryThis(),
+		Sys_GetFactory( m_hFileSystem ) //Checked on startup for availability, so we don't need to worry about it.
 	};
 
 	if( !info.Initialize( factories, ARRAYSIZE( factories ) ) )

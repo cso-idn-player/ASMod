@@ -4,6 +4,8 @@
 #include <Angelscript/util/ASLogging.h>
 #include <Angelscript/util/CASFileLogger.h>
 
+#include "FileSystem.h"
+
 #include "ASMod/IASModModule.h"
 #include "CASModModuleInfo.h"
 #include "CASModLogger.h"
@@ -13,6 +15,8 @@
 #include "SvenCoopSupport.h"
 
 #include "CASMod.h"
+
+IFileSystem* g_pFileSystem = nullptr;
 
 CASMod g_ASMod;
 
@@ -73,6 +77,9 @@ bool CASMod::Initialize()
 	if( !LoadGameModule() )
 		return false;
 
+	if( !LoadFileSystemModule() )
+		return false;
+
 	if( !SetupEnvironment() )
 		return false;
 
@@ -84,12 +91,16 @@ bool CASMod::Initialize()
 
 	LOG_MESSAGE( PLID, "Finished initializing AngelScript Mod Loader" );
 
+	m_bFullyInitialized = true;
+
 	return true;
 }
 
 void CASMod::Shutdown()
 {
 	LOG_MESSAGE( PLID, "Shutting down AngelScript Mod Loader" );
+
+	m_bFullyInitialized = false;
 
 	UnloadPlugins();
 
@@ -122,6 +133,13 @@ void CASMod::Shutdown()
 	//Reset the environment to release any ref counted objects.
 	m_Environment = std::move( CASSimpleEnvironment() );
 
+	if( m_hFileSystem != nullptr )
+	{
+		g_pFileSystem = nullptr;
+		Sys_UnloadModule( m_hFileSystem );
+		m_hFileSystem = nullptr;
+	}
+
 	if( m_hGame != nullptr )
 	{
 		Sys_UnloadModule( m_hGame );
@@ -132,6 +150,9 @@ void CASMod::Shutdown()
 
 void CASMod::Think()
 {
+	if( !m_bFullyInitialized )
+		return;
+
 	for( auto& module : m_Modules )
 	{
 		module.GetModule()->Think();
@@ -269,6 +290,53 @@ bool CASMod::LoadGameModule()
 	m_pGameFactory = Sys_GetFactory( m_hGame );
 
 	LOG_MESSAGE( PLID, "Loaded game module factory: %s", m_pGameFactory ? "yes" : "no" );
+
+	return true;
+}
+
+bool CASMod::LoadFileSystemModule()
+{
+	// Determine which filesystem to use.
+#if defined ( _WIN32 )
+	const char *szFsModule = "filesystem_stdio.dll";
+#elif defined(OSX)
+	const char *szFsModule = "filesystem_stdio.dylib";
+#elif defined(LINUX)
+	const char *szFsModule = "filesystem_stdio.so";
+#else
+#error
+#endif
+
+	LOG_MESSAGE( PLID, "Loading GoldSource FileSystem" );
+
+	// Get filesystem interface.
+	m_hFileSystem = Sys_LoadModule( szFsModule );
+
+	assert( m_hFileSystem );
+
+	if( !m_hFileSystem )
+	{
+		LOG_ERROR( PLID, "Couldn't load filesystem library" );
+		return false;
+	}
+
+	CreateInterfaceFn fileSystemFactory = Sys_GetFactory( m_hFileSystem );
+
+	if( !fileSystemFactory )
+	{
+		LOG_ERROR( PLID, "Couldn't get filesystem factory" );
+		return false;
+	}
+
+	g_pFileSystem = static_cast<IFileSystem*>( fileSystemFactory( FILESYSTEM_INTERFACE_VERSION, nullptr ) );
+	
+	assert( g_pFileSystem );
+	
+	if( !g_pFileSystem )
+	{
+		LOG_ERROR( PLID, "Couldn't get filesystem" );
+		return false;
+	}
 
 	return true;
 }

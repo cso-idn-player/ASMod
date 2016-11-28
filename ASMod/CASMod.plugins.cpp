@@ -145,6 +145,10 @@ bool CASMod::LoadPlugin( const char* const pszPluginName, const char* const pszS
 
 void CASMod::UnloadPlugins()
 {
+	//Wasn't fully initialized, can't unload plugins.
+	if( !m_PluginManager )
+		return;
+
 	LOG_MESSAGE( PLID, "Shutting down and unloading plugins" );
 
 	CallVoidFunction( "void PluginShutdown()" );

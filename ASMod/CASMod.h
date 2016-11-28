@@ -34,6 +34,7 @@
 
 class CASModModuleInfo;
 class IASLogger;
+class IFileSystem;
 
 class CASMod final : public IASMod
 {
@@ -102,6 +103,12 @@ private:
 	*	@return Whether the module was successfully loaded.
 	*/
 	bool LoadGameModule();
+
+	/**
+	*	Loads the filesystem module. This is the IFileSystem library, not the ASMod module.
+	*	@return Whether the module was successfully loaded.
+	*/
+	bool LoadFileSystemModule();
 
 	/**
 	*	Sets up the environment.
@@ -193,6 +200,8 @@ private:
 	CSysModule* m_hGame = nullptr;
 	CreateInterfaceFn m_pGameFactory = nullptr;
 
+	CSysModule* m_hFileSystem = nullptr;
+
 	bool m_bUsingLocalEnvironment = false;
 
 	CASSimpleEnvironment m_Environment;
@@ -205,6 +214,8 @@ private:
 	std::unique_ptr<CASModuleManager> m_PluginManager;
 	const CASModuleDescriptor* m_pPluginDescriptor = nullptr;
 
+	bool m_bFullyInitialized = false;
+
 	//Configuration
 	EnvType m_EnvType = EnvType::DEFAULT;
 
@@ -214,5 +225,7 @@ private:
 };
 
 extern CASMod g_ASMod;
+
+extern IFileSystem* g_pFileSystem;
 
 #endif //ASMOD_CASMOD_H

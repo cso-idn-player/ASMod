@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "interface.h"
@@ -211,8 +212,11 @@ private:
 
 	Modules_t m_Modules;
 
+	//Plugins
 	std::unique_ptr<CASModuleManager> m_PluginManager;
 	const CASModuleDescriptor* m_pPluginDescriptor = nullptr;
+
+	char m_szPluginFallbackPath[ PATH_MAX ] = {};
 
 	bool m_bFullyInitialized = false;
 

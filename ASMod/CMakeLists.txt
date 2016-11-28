@@ -75,6 +75,7 @@ target_include_directories( ${PLUGIN_NAME} PRIVATE
 target_compile_definitions( ${PLUGIN_NAME} PRIVATE
 	${SHARED_DEFINITIONS}
 	ASMOD_PLUGIN
+	ASMOD_BASE_DIR="${META_BASE_DIR_RELATIVE}/${PLUGIN_NAME}"
 )
 
 #Add library dependencies here.

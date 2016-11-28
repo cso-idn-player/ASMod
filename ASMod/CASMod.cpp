@@ -246,6 +246,10 @@ bool CASMod::LoadConfig( const char* pszConfigFilename, const bool bOptional )
 
 void CASMod::ApplyConfig( kv::Block& block )
 {
+	//Clear any leftover settings.
+	m_EnvType = EnvType::DEFAULT;
+	memset( m_szPluginFallbackPath, 0, sizeof( m_szPluginFallbackPath ) );
+
 	auto pLoader = block.FindFirstChild<kv::Block>( "loader" );
 
 	if( pLoader )
@@ -262,6 +266,26 @@ void CASMod::ApplyConfig( kv::Block& block )
 		if( pSvenCoopHack )
 		{
 			m_EnvType = atoi( pSvenCoopHack->GetValue().CStr() ) != 0 ? EnvType::SVENCOOP_HACK : m_EnvType;
+		}
+	}
+
+	auto pGame = block.FindFirstChild<kv::Block>( "game" );
+
+	if( pGame )
+	{
+		auto pCurrentGame = pGame->FindFirstChild<kv::Block>( gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_NAME ) );
+
+		if( pCurrentGame )
+		{
+			auto pPluginFallbackPath = pCurrentGame->FindFirstChild<kv::KV>( "pluginFallbackPath" );
+
+			if( pPluginFallbackPath )
+			{
+				if( UTIL_SafeStrncpy( m_szPluginFallbackPath, pPluginFallbackPath->GetValue().CStr(), sizeof( m_szPluginFallbackPath ) ) )
+					LOG_MESSAGE( PLID, "Using Plugin fallback path \"%s\"", m_szPluginFallbackPath );
+				else
+					LOG_ERROR( PLID, "Plugin fallback path \"%s\" is too long!", pPluginFallbackPath->GetValue().CStr() );
+			}
 		}
 	}
 }

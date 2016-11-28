@@ -195,4 +195,26 @@ inline char* UTIL_ConvertCRtoNL( char* str )
 	return str;
 }
 
+/**
+*	Sets a default filename for the given string if none was found.
+*/
+inline std::string& UTIL_DefaultExtension( std::string& szFilename, const char* const pszExtension )
+{
+	for( auto it = szFilename.rbegin(), end = szFilename.rend(); it != end; ++it )
+	{
+		//No extension found.
+		if( *it == '/' )
+			break;
+
+		//Path separator found.
+		//Note: this can also trigger if the filename is something like "foo/..". ".." doesn't have an extension anyway... - Solokiller
+		if( *it == '.' )
+			return szFilename;
+	}
+
+	szFilename += pszExtension;
+
+	return szFilename;
+}
+
 #endif //COMMON_STRINGUTILS_H

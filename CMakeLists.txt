@@ -183,7 +183,8 @@ if( NOT GAME_DIRECTORY AND DEPLOY_TO_GAME )
 endif()
 
 #The base directory for all Metamod data.
-set( META_BASE_DIRECTORY ${GAME_DIRECTORY}/addons )
+set( META_BASE_DIR_RELATIVE addons )
+set( META_BASE_DIRECTORY ${GAME_DIRECTORY}/${META_BASE_DIR_RELATIVE} )
 
 #The directory where third party libraries are located.
 set( META_BIN_DIR_RELATIVE "addons/bin" )
@@ -285,6 +286,7 @@ endif()
 set( SHARED_DEFINITIONS
 	${OPT_TYPE}
 	${HLSDK_3_2_OLD_EIFACE_FLAG}
+	META_BASE_DIR_RELATIVE="${META_BASE_DIR_RELATIVE}"
 	META_BIN_DIRECTORY="${META_BIN_DIR_RELATIVE}"
 )
 

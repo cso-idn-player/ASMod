@@ -5,6 +5,7 @@ add_sources(
 	ASFileSystemConstants.h
 	ASFileSystemUtils.cpp
 	ASFileSystemUtils.h
+	CASBaseFile.h
 	CASBLOB.cpp
 	CASBLOB.h
 	CASDirectory.cpp

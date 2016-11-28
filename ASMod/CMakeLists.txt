@@ -23,10 +23,13 @@ add_sources(
 	ASMod.rc
 	CASMod.h
 	CASMod.cpp
+	CASMod.plugins.cpp
 	CASModLogger.h
 	CASModModuleInfo.h
 	CASModModuleInfo.cpp
 	CASModModuleLogger.h
+	CASPluginBuilder.h
+	CASPluginBuilder.cpp
 	CreateInterface_api.cpp
 	engine_api.cpp
 	h_export.cpp

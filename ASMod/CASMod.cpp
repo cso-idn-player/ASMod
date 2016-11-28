@@ -79,6 +79,9 @@ bool CASMod::Initialize()
 	if( !LoadModules() )
 		return false;
 
+	if( !LoadPlugins() )
+		return false;
+
 	LOG_MESSAGE( PLID, "Finished initializing AngelScript Mod Loader" );
 
 	return true;
@@ -87,6 +90,8 @@ bool CASMod::Initialize()
 void CASMod::Shutdown()
 {
 	LOG_MESSAGE( PLID, "Shutting down AngelScript Mod Loader" );
+
+	UnloadPlugins();
 
 	UnloadModules();
 

@@ -1,6 +1,8 @@
 #ifndef ASMOD_CASMOD_H
 #define ASMOD_CASMOD_H
 
+#include <cassert>
+#include <memory>
 #include <vector>
 
 #include "interface.h"
@@ -11,17 +13,24 @@
 #undef VOID
 
 #include <Angelscript/util/CASRefPtr.h>
+#include <Angelscript/CASModuleManager.h>
 
 #include "ASMod/CASSimpleEnvironment.h"
 #include "ASMod/IASMod.h"
 
 #include "keyvalues/KVForward.h"
 
+#define ASMOD_CFG_DIR "cfg/"
+
 #define ASMOD_CONFIG_FILENAME "Config.txt"
 #define ASMOD_MODULES_DIR "modules"
 #define ASMOD_MODULES_FILENAME "Modules.txt"
+#define ASMOD_PLUGINS_DIR "plugins"
+#define ASMOD_CFG_PLUGINS ASMOD_CFG_DIR "Plugins.txt"
 
 #define ASMOD_SCSUPPORT_FILENAME "SvenCoopSupport.txt"
+
+#define ASMOD_SCRIPT_EXTENSION ".as"
 
 class CASModModuleInfo;
 class IASLogger;
@@ -119,9 +128,64 @@ private:
 	bool LoadModuleFromBlock( kv::Block& block );
 
 	/**
+	*	Loads all plugins.
+	*	@return Whether plugin loading succeeded without critical errors.
+	*/
+	bool LoadPlugins();
+
+	/**
+	*	Loads a plugin.
+	*	@param pszPluginName Name of the plugin.
+	*	@param pszScriptName Name of the script to load.
+	*	@return Whether the plugin successfully loaded.
+	*/
+	bool LoadPluginFromBlock( kv::Block& block );
+
+	/**
+	*	Loads a plugin.
+	*	@param pszPluginName Name of the plugin.
+	*	@param pszScriptName Name of the script to load.
+	*	@return Whether the plugin successfully loaded.
+	*/
+	bool LoadPlugin( const char* const pszPluginName, const char* const pszScriptName );
+
+	/**
+	*	Unloads all plugins.
+	*/
+	void UnloadPlugins();
+
+	/**
 	*	Unloads all modules.
 	*/
 	void UnloadModules();
+
+	/**
+	*	Calls a function with void return type on all plugins.
+	*	@param pszFunctionSignature Complete function signature. e.g. "void PluginInit()".
+	*	@param args Arguments to pass.
+	*	@tparam ARGS Argument types for args.
+	*/
+	template<typename... ARGS>
+	void CallVoidFunction( const char* const pszFunctionSignature, ARGS&&... args )
+	{
+		assert( pszFunctionSignature );
+
+		CASOwningContext ctx( *m_Environment.GetScriptEngine() );
+
+		decltype( m_PluginManager->FindModuleByIndex( 0 ) ) pModule;
+
+		for( decltype( m_PluginManager->GetModuleCount() ) index = 0; index < m_PluginManager->GetModuleCount(); ++index )
+		{
+			pModule = m_PluginManager->FindModuleByIndex( index );
+
+			auto pFunction = pModule->GetModule()->GetFunctionByDecl( pszFunctionSignature );
+
+			if( pFunction )
+			{
+				as::Call( ctx.GetContext(), pFunction, std::move( args )... );
+			}
+		}
+	}
 
 private:
 	char m_szLoaderDir[ PATH_MAX ] = {};
@@ -137,6 +201,9 @@ private:
 	CASRefPtr<IASLogger> m_FileLogger;
 
 	Modules_t m_Modules;
+
+	std::unique_ptr<CASModuleManager> m_PluginManager;
+	const CASModuleDescriptor* m_pPluginDescriptor = nullptr;
 
 	//Configuration
 	EnvType m_EnvType = EnvType::DEFAULT;

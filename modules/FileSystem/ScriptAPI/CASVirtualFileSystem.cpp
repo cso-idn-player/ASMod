@@ -10,11 +10,11 @@
 
 #include "CASDirectory.h"
 #include "ASFileSystemUtils.h"
-#include "CASFile.h"
+#include "CASSTDIOFile.h"
 
 #include "CASVirtualFileSystem.h"
 
-CASFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags )
+CASSTDIOFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags )
 {
 	const bool bIsOutput = ( uiOpenFlags & OpenFileBit::OMASK ) != 0;
 
@@ -80,7 +80,7 @@ CASFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename, const Op
 	//The filesystem is a bit weird when it comes to read/write, this is how we can access files we write
 	//FileHandle_t hHandle = g_pFileSystem->Open( szFilename.c_str(), szMode.c_str(), bIsOutput ? "GAMECONFIG" : "GAME" );
 
-	return new CASFile( szFilename.c_str(), uiOpenFlags, pFile );
+	return new CASSTDIOFile( szFilename.c_str(), uiOpenFlags, pFile );
 }
 
 void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
@@ -130,7 +130,7 @@ void CASVirtualFileSystem::Shutdown()
 	m_DirectoryList.RemoveAllDirectories();
 }
 
-static CASFile* CASVirtualFileSystem_OpenFile( CASVirtualFileSystem* const pThis, const std::string& szFilename, const OpenFileFlags_t uiOpenFlags )
+static CASSTDIOFile* CASVirtualFileSystem_OpenFile( CASVirtualFileSystem* const pThis, const std::string& szFilename, const OpenFileFlags_t uiOpenFlags )
 {
 	return pThis->OpenFile( szFilename.c_str(), uiOpenFlags );
 }

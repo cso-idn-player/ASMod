@@ -5,7 +5,7 @@
 
 #include "ASFileSystemConstants.h"
 #include "CASBLOB.h"
-#include "CASFile.h"
+#include "CASSTDIOFile.h"
 #include "CASVirtualFileSystem.h"
 
 #include "ASFileSystem.h"
@@ -16,7 +16,7 @@ void RegisterScriptFileSystem( asIScriptEngine& scriptEngine, const char* const 
 	scriptEngine.SetDefaultNamespace( pszNamespace );
 
 	RegisterScriptBLOB( scriptEngine );
-	RegisterScriptFile( scriptEngine );
+	RegisterScriptSTDIOFile( scriptEngine );
 	RegisterScriptOpenFileFlags( scriptEngine );
 
 	RegisterScriptVirtualFileSystem( scriptEngine );

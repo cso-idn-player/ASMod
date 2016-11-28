@@ -18,7 +18,7 @@ class CASBLOB;
 *	A file that scripts can open to read from or write to.
 *	TODO: if the SteamPipe filesystem is available, its extra directories need to be searched as well.
 */
-class CASFile : public CASRefCountedBaseClass
+class CASSTDIOFile : public CASRefCountedBaseClass
 {
 public:
 	/**
@@ -27,8 +27,8 @@ public:
 	*	@param uiOpenFlags Flags that were used to open this file.
 	*	@param pFile File pointer.
 	*/
-	CASFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags, FILE* pFile );
-	~CASFile();
+	CASSTDIOFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags, FILE* pFile );
+	~CASSTDIOFile();
 
 	/**
 	*	@return The filename.
@@ -145,14 +145,14 @@ private:
 	FILE* m_pFile;
 
 private:
-	CASFile( const CASFile& ) = delete;
-	CASFile& operator=( const CASFile& ) = delete;
+	CASSTDIOFile( const CASSTDIOFile& ) = delete;
+	CASSTDIOFile& operator=( const CASSTDIOFile& ) = delete;
 };
 
 /**
-*	Registers the File class.
+*	Registers the File class using a stdio based file API.
 *	@param scriptEngine Script engine.
 */
-void RegisterScriptFile( asIScriptEngine& scriptEngine );
+void RegisterScriptSTDIOFile( asIScriptEngine& scriptEngine );
 
 #endif //FILESYSTEM_SCRIPTAPI_CASFILE_H

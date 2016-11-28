@@ -19,9 +19,9 @@
 #include "CASDirectory.h"
 #include "CASBLOB.h"
 
-#include "CASFile.h"
+#include "CASSTDIOFile.h"
 
-CASFile::CASFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags, FILE* pFile )
+CASSTDIOFile::CASSTDIOFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags, FILE* pFile )
 	: m_szFilename( pszFilename )
 	, m_uiFlags( uiOpenFlags )
 	, m_pFile( pFile )
@@ -35,18 +35,18 @@ CASFile::CASFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFla
 	}
 }
 
-CASFile::~CASFile()
+CASSTDIOFile::~CASSTDIOFile()
 {
 	Close();
 }
 
-void CASFile::Release() const
+void CASSTDIOFile::Release() const
 {
 	if( InternalRelease() )
 		delete this;
 }
 
-void CASFile::Close()
+void CASSTDIOFile::Close()
 {
 	if( IsOpen() )
 	{
@@ -60,7 +60,7 @@ void CASFile::Close()
 	}
 }
 
-uint64_t CASFile::GetSize() const
+uint64_t CASSTDIOFile::GetSize() const
 {
 	assert( IsOpen() );
 
@@ -75,20 +75,20 @@ uint64_t CASFile::GetSize() const
 	return 0;
 }
 
-uint64_t CASFile::Tell() const
+uint64_t CASSTDIOFile::Tell() const
 {
 	assert( IsOpen() );
 	return ftell( m_pFile );
 }
 
-bool CASFile::EOFReached() const
+bool CASSTDIOFile::EOFReached() const
 {
 	assert( IsOpen() );
 
 	return !!feof( m_pFile );
 }
 
-uint64_t CASFile::Write( const std::string& szString )
+uint64_t CASSTDIOFile::Write( const std::string& szString )
 {
 	assert( IsOpen() );
 
@@ -98,7 +98,7 @@ uint64_t CASFile::Write( const std::string& szString )
 	return WriteBytes( szString.c_str(), szString.length() );
 }
 
-uint64_t CASFile::Write( const CASBLOB* pBlob )
+uint64_t CASSTDIOFile::Write( const CASBLOB* pBlob )
 {
 	assert( IsOpen() );
 
@@ -117,7 +117,7 @@ uint64_t CASFile::Write( const CASBLOB* pBlob )
 	return uiBytesWritten;
 }
 
-void CASFile::Flush()
+void CASSTDIOFile::Flush()
 {
 	assert( IsOpen() );
 
@@ -127,7 +127,7 @@ void CASFile::Flush()
 	fflush( m_pFile );
 }
 
-std::string CASFile::ReadCharacter()
+std::string CASSTDIOFile::ReadCharacter()
 {
 	assert( IsOpen() );
 
@@ -144,7 +144,7 @@ std::string CASFile::ReadCharacter()
 	return character;
 }
 
-void CASFile::ReadLine( std::string& szOutLine, const std::string& szDelim )
+void CASSTDIOFile::ReadLine( std::string& szOutLine, const std::string& szDelim )
 {
 	assert( IsOpen() );
 
@@ -187,7 +187,7 @@ void CASFile::ReadLine( std::string& szOutLine, const std::string& szDelim )
 	}
 }
 
-bool CASFile::Read( CASBLOB* pBlob, size_t uiSizeInBytes )
+bool CASSTDIOFile::Read( CASBLOB* pBlob, size_t uiSizeInBytes )
 {
 	assert( IsOpen() );
 
@@ -230,13 +230,13 @@ bool CASFile::Read( CASBLOB* pBlob, size_t uiSizeInBytes )
 	return bSuccess;
 }
 
-bool CASFile::Read( CASBLOB* pBlob )
+bool CASSTDIOFile::Read( CASBLOB* pBlob )
 {
 	//Read in everything you can
 	return Read( pBlob, static_cast<size_t>( GetSize() - Tell() ) );
 }
 
-CASBLOB* CASFile::ReadBlob( size_t uiSizeInBytes )
+CASBLOB* CASSTDIOFile::ReadBlob( size_t uiSizeInBytes )
 {
 	assert( IsOpen() );
 
@@ -257,7 +257,7 @@ CASBLOB* CASFile::ReadBlob( size_t uiSizeInBytes )
 	return pBlob;
 }
 
-uint64_t CASFile::WriteBytes( const void* pData, size_t uiSizeInBytes )
+uint64_t CASSTDIOFile::WriteBytes( const void* pData, size_t uiSizeInBytes )
 {
 	assert( IsOpen() );
 	assert( pData );
@@ -271,61 +271,61 @@ uint64_t CASFile::WriteBytes( const void* pData, size_t uiSizeInBytes )
 	return fwrite( pData, 1, uiSizeInBytes, m_pFile );
 }
 
-void RegisterScriptFile( asIScriptEngine& scriptEngine )
+void RegisterScriptSTDIOFile( asIScriptEngine& scriptEngine )
 {
 	const char* pszObjectName = "File";
 
 	scriptEngine.RegisterObjectType( pszObjectName, 0, asOBJ_REF );
 
-	as::RegisterRefCountedBaseClass<CASFile>( &scriptEngine, pszObjectName );
+	as::RegisterRefCountedBaseClass<CASSTDIOFile>( &scriptEngine, pszObjectName );
 
 	//Do not let the user close files. This class is a RAII style wrapper around files, so its destructor will close it.
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "bool IsOpen() const",
-		asMETHOD( CASFile, IsOpen ), asCALL_THISCALL );
+		asMETHOD( CASSTDIOFile, IsOpen ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "uint64 GetSize() const",
-		asMETHOD( CASFile, GetSize ), asCALL_THISCALL );
+		asMETHOD( CASSTDIOFile, GetSize ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "uint64 Tell() const",
-		asMETHOD( CASFile, Tell ), asCALL_THISCALL );
+		asMETHOD( CASSTDIOFile, Tell ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "bool EOFReached() const",
-		asMETHOD( CASFile, EOFReached ), asCALL_THISCALL );
+		asMETHOD( CASSTDIOFile, EOFReached ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "uint64 Write(const " AS_STRING_OBJNAME "& in szString)",
-		asMETHODPR( CASFile, Write, ( const std::string& ), uint64_t ), asCALL_THISCALL );
+		asMETHODPR( CASSTDIOFile, Write, ( const std::string& ), uint64_t ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "uint64 Write(const BLOB@ pBlob)",
-		asMETHODPR( CASFile, Write, ( const CASBLOB* ), uint64_t ), asCALL_THISCALL );
+		asMETHODPR( CASSTDIOFile, Write, ( const CASBLOB* ), uint64_t ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "void Flush()",
-		asMETHOD( CASFile, Flush ), asCALL_THISCALL );
+		asMETHOD( CASSTDIOFile, Flush ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, AS_STRING_OBJNAME " ReadCharacter()",
-		asMETHOD( CASFile, ReadCharacter ), asCALL_THISCALL );
+		asMETHOD( CASSTDIOFile, ReadCharacter ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "void ReadLine(" AS_STRING_OBJNAME "& out szOutLine, const " AS_STRING_OBJNAME "& in szDelim = '\n')",
-		asMETHOD( CASFile, ReadLine ), asCALL_THISCALL );
+		asMETHOD( CASSTDIOFile, ReadLine ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "bool Read(BLOB@ pBlob, size_t uiSizeInBytes)",
-		asMETHODPR( CASFile, Read, ( CASBLOB*, size_t ), bool ), asCALL_THISCALL );
+		asMETHODPR( CASSTDIOFile, Read, ( CASBLOB*, size_t ), bool ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "bool Read(BLOB@ pBlob)",
-		asMETHODPR( CASFile, Read, ( CASBLOB* ), bool ), asCALL_THISCALL );
+		asMETHODPR( CASSTDIOFile, Read, ( CASBLOB* ), bool ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "BLOB@ ReadBlob(size_t uiSizeInBytes = 0)",
-		asMETHODPR( CASFile, ReadBlob, ( size_t ), CASBLOB* ), asCALL_THISCALL );
+		asMETHODPR( CASSTDIOFile, ReadBlob, ( size_t ), CASBLOB* ), asCALL_THISCALL );
 }

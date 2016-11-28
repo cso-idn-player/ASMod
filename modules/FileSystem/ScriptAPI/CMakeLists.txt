@@ -13,8 +13,8 @@ add_sources(
 	CASDirectoryList.h
 	CASExtensionList.cpp
 	CASExtensionList.h
-	CASFile.cpp
-	CASFile.h
+	CASSTDIOFile.cpp
+	CASSTDIOFile.h
 	CASVirtualFileSystem.cpp
 	CASVirtualFileSystem.h
 )

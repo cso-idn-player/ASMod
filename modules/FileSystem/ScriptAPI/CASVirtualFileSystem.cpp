@@ -6,15 +6,17 @@
 #include <extdll.h>
 #include <meta_api.h>
 
+#include "FileSystem.h"
+
 #include "Platform.h"
 
 #include "CASDirectory.h"
 #include "ASFileSystemUtils.h"
-#include "CASSTDIOFile.h"
+#include "CASSteamPipeFile.h"
 
 #include "CASVirtualFileSystem.h"
 
-CASSTDIOFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags )
+CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags )
 {
 	const bool bIsOutput = ( uiOpenFlags & OpenFileBit::OMASK ) != 0;
 
@@ -67,20 +69,25 @@ CASSTDIOFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename, con
 	if( !ASFileSystemUtils::FormatOpenFlags( uiOpenFlags, szMode ) )
 		return nullptr;
 
+	/*
 	//Prepend the game directory.
-	//TODO: need to handle non-Steam engines, so IFileSystem should always be used, with the FileSystem library from the prototype engine to serve as a backup in case of failure. - Solokiller
 	auto szActualFilename = std::string( gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR ) ) + '/' + szFilename;
 
 	FILE* pFile = fopen( szActualFilename.c_str(), szMode.c_str() );
 
 	if( !pFile )
 		return nullptr;
+		*/
 
 	//SteamPipe version
 	//The filesystem is a bit weird when it comes to read/write, this is how we can access files we write
-	//FileHandle_t hHandle = g_pFileSystem->Open( szFilename.c_str(), szMode.c_str(), bIsOutput ? "GAMECONFIG" : "GAME" );
+	//Write to config path, read from anywhere.
+	FileHandle_t hHandle = g_pFileSystem->Open( szFilename.c_str(), szMode.c_str(), bIsOutput ? "GAMECONFIG" : nullptr );
 
-	return new CASSTDIOFile( szFilename.c_str(), uiOpenFlags, pFile );
+	if( hHandle == FILESYSTEM_INVALID_HANDLE )
+		return nullptr;
+
+	return new CASSteamPipeFile( szFilename.c_str(), uiOpenFlags, hHandle );
 }
 
 void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
@@ -112,7 +119,7 @@ void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
 	if( !m_DirectoryList.CanAccessDirectory( szPath.c_str(), FileAccessBit::WRITE ) )
 		return;
 
-	//TODO: see function above - Solokiller
+	//We only allow writing to the main game directory, so this works for SteamPipe. - Solokiller
 	auto szActualFilename = std::string( gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR ) ) + '/' + szFilename;
 
 	std::error_code error;
@@ -130,7 +137,7 @@ void CASVirtualFileSystem::Shutdown()
 	m_DirectoryList.RemoveAllDirectories();
 }
 
-static CASSTDIOFile* CASVirtualFileSystem_OpenFile( CASVirtualFileSystem* const pThis, const std::string& szFilename, const OpenFileFlags_t uiOpenFlags )
+static CASSteamPipeFile* CASVirtualFileSystem_OpenFile( CASVirtualFileSystem* const pThis, const std::string& szFilename, const OpenFileFlags_t uiOpenFlags )
 {
 	return pThis->OpenFile( szFilename.c_str(), uiOpenFlags );
 }

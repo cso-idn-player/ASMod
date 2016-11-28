@@ -41,7 +41,6 @@ protected:
 	*	Constructs a new file handle that points to the file named by pszFilename, which can be accessed using pFile.
 	*	@param pszFilename Name of the file.
 	*	@param uiOpenFlags Flags that were used to open this file.
-	*	@param pFile File pointer.
 	*/
 	CASBaseFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags );
 

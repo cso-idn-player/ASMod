@@ -10,6 +10,7 @@
 
 class CASModBaseModule;
 class IASEnvironment;
+class IFileSystem;
 
 /**
 *	This module's instance.
@@ -20,5 +21,11 @@ extern CASModBaseModule* g_pModule;
 *	The Angelscript environment.
 */
 extern IASEnvironment* g_pASEnv;
+
+/**
+*	The SteamPipe filesystem.
+*/
+
+extern IFileSystem* g_pFileSystem;
 
 #endif //ASMOD_MODULE_MODULE_COMMON_H

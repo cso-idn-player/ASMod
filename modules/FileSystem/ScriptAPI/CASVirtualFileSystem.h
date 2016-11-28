@@ -7,7 +7,7 @@
 #include "CASExtensionList.h"
 
 class asIScriptEngine;
-class CASSTDIOFile;
+class CASSteamPipeFile;
 
 /**
 *	This class represents the virtual filesystem used by all Angelscript scripts.
@@ -68,7 +68,7 @@ public:
 	*	@param uiOpenFlags Open flags.
 	*	@return If the file could be opened, the file. otherwise, null.
 	*/
-	CASSTDIOFile* OpenFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags );
+	CASSteamPipeFile* OpenFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags );
 
 	/**
 	*	Removes the given file if you have permission to do so.

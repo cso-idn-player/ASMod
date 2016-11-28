@@ -16,6 +16,8 @@ add_sources(
 	CASExtensionList.h
 	CASSTDIOFile.cpp
 	CASSTDIOFile.h
+	CASSteamPipeFile.cpp
+	CASSteamPipeFile.h
 	CASVirtualFileSystem.cpp
 	CASVirtualFileSystem.h
 )

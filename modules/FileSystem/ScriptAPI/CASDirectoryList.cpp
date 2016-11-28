@@ -218,7 +218,7 @@ struct CClearTempDirectories
 		{
 			as::Diagnostic( "Clearing temporary directory '%s'\n", pszPath );
 
-			//TODO: the SteamPipe filesystem doesn't need the gamedir - Solokiller
+			//Since we can only write to the main game directory, this will work for SteamPipe too. - Solokiller
 			for( auto entry : std::experimental::filesystem::directory_iterator( std::string( gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR ) ) + '/' + pszPath ) )
 			{
 				std::experimental::filesystem::remove( entry );

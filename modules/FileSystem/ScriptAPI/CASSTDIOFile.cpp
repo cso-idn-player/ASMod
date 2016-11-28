@@ -15,8 +15,6 @@
 
 #include "ASFileSystemUtils.h"
 
-#include "CASVirtualFileSystem.h"
-#include "CASDirectory.h"
 #include "CASBLOB.h"
 
 #include "CASSTDIOFile.h"
@@ -26,16 +24,6 @@ CASSTDIOFile::CASSTDIOFile( const char* const pszFilename, const OpenFileFlags_t
 	, m_pFile( pFile )
 {
 	assert( pFile != nullptr );
-
-	if( ASFileSystem_LogFileAccess() )
-	{
-		as::Diagnostic( "File \"%s\" opened\n", pszFilename );
-	}
-}
-
-CASSTDIOFile::~CASSTDIOFile()
-{
-	Close();
 }
 
 void CASSTDIOFile::Release() const

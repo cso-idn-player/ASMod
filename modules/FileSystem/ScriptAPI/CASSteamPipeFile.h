@@ -1,11 +1,13 @@
-#ifndef FILESYSTEM_SCRIPTAPI_CASSTDIOFILE_H
-#define FILESYSTEM_SCRIPTAPI_CASSTDIOFILE_H
+#ifndef FILESYSTEM_SCRIPTAPI_CASSTEAMPIPEFILE_H
+#define FILESYSTEM_SCRIPTAPI_CASSTEAMPIPEFILE_H
 
 #include <cstdint>
 #include <cstdio>
 #include <string>
 
 #include <Angelscript/util/CASBaseClass.h>
+
+#include "FileSystem.h"
 
 #include "ASFileSystemConstants.h"
 
@@ -17,11 +19,11 @@ class CASBLOB;
 /**
 *	A file that scripts can open to read from or write to. Uses stdio to access files.
 */
-class CASSTDIOFile : public CASBaseFile<CASSTDIOFile>
+class CASSteamPipeFile : public CASBaseFile<CASSteamPipeFile>
 {
 public:
-	typedef CASBaseFile<CASSTDIOFile> BaseClass;
-	typedef CASSTDIOFile ThisClass;
+	typedef CASBaseFile<CASSteamPipeFile> BaseClass;
+	typedef CASSteamPipeFile ThisClass;
 
 protected:
 	template<typename SUBCLASS>
@@ -29,20 +31,20 @@ protected:
 
 public:
 	/**
-	*	Constructs a new file handle that points to the file named by pszFilename, which can be accessed using pFile.
+	*	Constructs a new file handle that points to the file named by pszFilename, which can be accessed using hFile.
 	*	@param pszFilename Name of the file.
 	*	@param uiOpenFlags Flags that were used to open this file.
-	*	@param pFile File pointer.
+	*	@param hFile File handle.
 	*/
-	CASSTDIOFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags, FILE* pFile );
-	~CASSTDIOFile() = default;
+	CASSteamPipeFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags, FileHandle_t hFile );
+	~CASSteamPipeFile() = default;
 
 	void Release() const;
 
 	/**
 	*	@return Whether this file is open.
 	*/
-	bool IsOpen() const { return m_pFile != nullptr; }
+	bool IsOpen() const { return m_hFile != FILESYSTEM_INVALID_HANDLE; }
 
 	/**
 	*	@return The size of the file.
@@ -77,17 +79,17 @@ protected:
 	uint64_t ReadBytes( void* pDest, size_t uiSizeInBytes, size_t uiElementCount );
 
 private:
-	FILE* m_pFile;
+	FileHandle_t m_hFile;
 
 private:
-	CASSTDIOFile( const CASSTDIOFile& ) = delete;
-	CASSTDIOFile& operator=( const CASSTDIOFile& ) = delete;
+	CASSteamPipeFile( const CASSteamPipeFile& ) = delete;
+	CASSteamPipeFile& operator=( const CASSteamPipeFile& ) = delete;
 };
 
 /**
-*	Registers the File class using a stdio based file API.
+*	Registers the File class using a SteamPipe based file API.
 *	@param scriptEngine Script engine.
 */
-void RegisterScriptSTDIOFile( asIScriptEngine& scriptEngine );
+void RegisterScriptSteamPipeFile( asIScriptEngine& scriptEngine );
 
-#endif //FILESYSTEM_SCRIPTAPI_CASSTDIOFILE_H
+#endif //FILESYSTEM_SCRIPTAPI_CASSTEAMPIPEFILE_H

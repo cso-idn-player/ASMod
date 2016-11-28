@@ -7,6 +7,8 @@
 
 #include "interface.h"
 
+#include "FileSystem.h"
+
 #include "ASMod/IASMod.h"
 #include "ASMod/IASEnvironment.h"
 
@@ -39,6 +41,13 @@ bool CASModBaseModule::Initialize( const CreateInterfaceFn* pFactories, const si
 	SetMemAllocFuncs(
 		m_pEnvironment->GetAllocFunc(), m_pEnvironment->GetFreeFunc(),
 		m_pEnvironment->GetArrayAllocFunc(), m_pEnvironment->GetArrayFreeFunc() );
+
+	g_pFileSystem = IFACE_CreateFromList<IFileSystem*>( pFactories, uiNumFactories, FILESYSTEM_INTERFACE_VERSION );
+
+	if( !g_pFileSystem )
+	{
+		as::Critical( "Couldn't get GoldSource FileSystem!\n" );
+	}
 
 	auto pEngFuncs = IFACE_CreateCStyleFromList<enginefuncs_t*>( pFactories, uiNumFactories, ENGINEFUNCS_T_NAME );
 
@@ -74,6 +83,8 @@ bool CASModBaseModule::Shutdown()
 	gpMetaGlobals = nullptr;
 	gpGlobals = nullptr;
 	memset( &g_engfuncs, 0, sizeof( g_engfuncs ) );
+
+	g_pFileSystem = nullptr;
 
 	SetMemAllocFuncs(
 		nullptr, nullptr,

@@ -23,6 +23,7 @@ add_sources(
 	ASMod.rc
 	CASMod.h
 	CASMod.cpp
+	CASMod.modules.cpp
 	CASMod.plugins.cpp
 	CASModLogger.h
 	CASModModuleInfo.h

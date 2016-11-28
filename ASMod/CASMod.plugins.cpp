@@ -3,11 +3,6 @@
 
 #include "Platform.h"
 
-#include <Angelscript/wrapper/ASCallable.h>
-
-#include <Angelscript/CASModuleManager.h>
-#include <Angelscript/CASModule.h>
-
 #include "StringUtils.h"
 
 #include "keyvalues/Keyvalues.h"

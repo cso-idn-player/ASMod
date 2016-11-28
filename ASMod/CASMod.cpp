@@ -148,6 +148,11 @@ void CASMod::Shutdown()
 	}
 }
 
+void CASMod::WorldCreated()
+{
+	CallVoidFunction( "void MapInit()" );
+}
+
 void CASMod::Think()
 {
 	if( !m_bFullyInitialized )

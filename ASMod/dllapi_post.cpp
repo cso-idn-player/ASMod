@@ -49,10 +49,19 @@ static void GameDLLInit_Post()
 	RETURN_META( MRES_IGNORED );
 }
 
+static int Spawn_Post( edict_t* pEntity )
+{
+	//Sven Co-op sets up its custom entity stuff when worldspawn spawns, so let it do its thing first and then let our plugins do their thing.
+	if( strcmp( STRING( pEntity->v.classname ), "worldspawn" ) == 0 )
+		g_ASMod.WorldCreated();
+
+	RETURN_META_VALUE( MRES_IGNORED, 0 );
+}
+
 static DLL_FUNCTIONS gFunctionTable_Post =
 {
 	&GameDLLInit_Post,		// pfnGameInit
-	NULL,					// pfnSpawn
+	&Spawn_Post,			// pfnSpawn
 	NULL,					// pfnThink
 	NULL,					// pfnUse
 	NULL,					// pfnTouch

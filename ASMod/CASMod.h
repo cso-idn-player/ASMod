@@ -14,7 +14,9 @@
 #undef VOID
 
 #include <Angelscript/util/CASRefPtr.h>
+#include <Angelscript/wrapper/ASCallable.h>
 #include <Angelscript/CASModuleManager.h>
+#include <Angelscript/CASModule.h>
 
 #include "ASMod/CASSimpleEnvironment.h"
 #include "ASMod/IASMod.h"
@@ -75,6 +77,8 @@ public:
 	bool Initialize();
 
 	void Shutdown();
+
+	void WorldCreated();
 
 	void Think();
 

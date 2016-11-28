@@ -23,13 +23,25 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 	const FileAccessBit::FileAccessBit requiredAccess = bIsOutput ? FileAccessBit::WRITE : FileAccessBit::READ;
 
 	if( !( m_AllowedAccess & requiredAccess ) )
+	{
+		as::Verbose( "Access denied for \"%s\": Global access setting forbids access\n", pszFilename );
+		return nullptr;
+	}
+
+	if( !pszFilename )
 		return nullptr;
 
-	if( !pszFilename || !( *pszFilename ) )
+	if( !( *pszFilename ) )
+	{
+		as::Verbose( "Access denied: Empty filename\n" );
 		return nullptr;
+	}
 
 	if( m_ExtBlacklist.HasExtension( pszFilename, true ) )
+	{
+		as::Verbose( "Access denied for \"%s\": File extension blacklisted\n", pszFilename );
 		return nullptr;
+	}
 
 	//Correct slashes and extract path and filename from complete filename.
 	std::string szFilename( pszFilename );
@@ -47,12 +59,15 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 	}
 
 	if( szFilename.empty() )
+	{
+		as::Verbose( "Access denied for \"%s\": No filename component\n", pszFilename );
 		return nullptr;
+	}
 
 	//Check if the user is allowed to access this directory.
 	const CASDirectory* pDirectory = nullptr;
 	
-	if( !m_DirectoryList.CanAccessDirectory( szPath.c_str(), requiredAccess, &pDirectory ) )
+	if( !m_DirectoryList.CanAccessDirectory( pszFilename, szPath.c_str(), requiredAccess, &pDirectory ) )
 		return nullptr;
 
 	if( !pDirectory )
@@ -67,7 +82,10 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 	std::string szMode;
 
 	if( !ASFileSystemUtils::FormatOpenFlags( uiOpenFlags, szMode ) )
+	{
+		as::Verbose( "Access denied for \"%s\": File open flags invalid\n", pszFilename );
 		return nullptr;
+	}
 
 	/*
 	//Prepend the game directory.
@@ -85,7 +103,10 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 	FileHandle_t hHandle = g_pFileSystem->Open( szFilename.c_str(), szMode.c_str(), bIsOutput ? "GAMECONFIG" : nullptr );
 
 	if( hHandle == FILESYSTEM_INVALID_HANDLE )
+	{
+		as::Verbose( "Couldn't open file \"%s\"\n", pszFilename );
 		return nullptr;
+	}
 
 	return new CASSteamPipeFile( szFilename.c_str(), uiOpenFlags, hHandle );
 }
@@ -116,7 +137,7 @@ void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
 		return;
 
 	//Need to have permission to access this directory.
-	if( !m_DirectoryList.CanAccessDirectory( szPath.c_str(), FileAccessBit::WRITE ) )
+	if( !m_DirectoryList.CanAccessDirectory( pszFilename, szPath.c_str(), FileAccessBit::WRITE ) )
 		return;
 
 	//We only allow writing to the main game directory, so this works for SteamPipe. - Solokiller

@@ -65,6 +65,17 @@ CASDirectory* CASDirectoryList::FindDirectory( const char* const pszPath, const 
 
 		*pszNextSlash = '\0';
 
+		//Passed in an invalid path like "scripts//store/file.txt", never grant any kind of access.
+		if( !( *pszCursor ) )
+		{
+			if( pbWasTruncated )
+				*pbWasTruncated = true;
+
+			pDirectory = nullptr;
+
+			break;
+		}
+
 		CASDirectory* pNextDir = pDirectory->FindChild( pszCursor );
 
 		//Couldn't find the directory we wanted
@@ -234,21 +245,40 @@ void CASDirectoryList::ClearTemporaryDirectories()
 	EnumerateDirectories( cleaner, m_pRoot );
 }
 
-bool CASDirectoryList::CanAccessDirectory( const char* const pszPath, const FileAccessBit::FileAccessBit access, const CASDirectory** ppDirectory ) const
+bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const char* const pszPath, const FileAccessBit::FileAccessBit access, const CASDirectory** ppDirectory ) const
 {
 	if( ppDirectory )
 		*ppDirectory = nullptr;
 
-	if( !pszPath || !( *pszPath ) )
+	if( !pszPath )
 		return false;
 
-	if( access == FileAccessBit::NONE )
+	if( !( *pszPath ) )
+	{
+		as::Verbose( "Access denied for \"%s\": No directory provided\n", pszFilename );
 		return false;
+	}
+
+	//Never allow these, they're exploitable.
+	if( strstr( pszPath, ".." ) )
+	{
+		as::Verbose( "Access denied for \"%s\": File paths cannot contain parent directory (..) as a directory name\n", pszFilename );
+		return false;
+	}
+
+	if( access == FileAccessBit::NONE )
+	{
+		as::Verbose( "Access denied for \"%s\": No access bits were given (internal error)\n", pszFilename );
+		return false;
+	}
 
 	char szPath[ PATH_MAX ];
 
 	if( !UTIL_SafeStrncpy( szPath, pszPath, sizeof( szPath ) ) )
+	{
+		as::Verbose( "Access denied for \"%s\": Failed to copy path (internal error)\n", pszFilename );
 		return false;
+	}
 
 	UTIL_FixSlashes( szPath );
 
@@ -257,7 +287,10 @@ bool CASDirectoryList::CanAccessDirectory( const char* const pszPath, const File
 	const CASDirectory* pDirectory = FindDirectory( szPath, true, &bTruncated );
 
 	if( !pDirectory )
+	{
+		as::Verbose( "Access denied for \"%s\": Couldn't find directory\n", pszFilename );
 		return false;
+	}
 
 	if( ppDirectory )
 		*ppDirectory = pDirectory;
@@ -266,13 +299,16 @@ bool CASDirectoryList::CanAccessDirectory( const char* const pszPath, const File
 	if( bTruncated )
 	{
 		if( !( pDirectory->GetFlags() & DirectoryFlagBit::IMPLICIT_SUBDIRECTORIES ) )
+		{
+			as::Verbose( "Access denied for \"%s\": Parent path does not allow access\n", pszFilename );
 			return false;
+		}
 	}
 
-	return CanAccessDirectory( pDirectory, access );
+	return CanAccessDirectory( pszFilename, pDirectory, access );
 }
 
-bool CASDirectoryList::CanAccessDirectory( const CASDirectory* const pDirectory, const FileAccessBit::FileAccessBit access ) const
+bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const CASDirectory* const pDirectory, const FileAccessBit::FileAccessBit access ) const
 {
 	if( !pDirectory )
 		return false;
@@ -281,7 +317,10 @@ bool CASDirectoryList::CanAccessDirectory( const CASDirectory* const pDirectory,
 		return false;
 
 	if( !( pDirectory->GetAccess() & access ) )
+	{
+		as::Verbose( "Access denied for \"%s\": Access to directory is forbidden\n", pszFilename );
 		return false;
+	}
 
 	return true;
 }

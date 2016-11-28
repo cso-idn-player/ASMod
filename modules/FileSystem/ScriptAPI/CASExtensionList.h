@@ -8,6 +8,7 @@
 
 /**
 *	Contains a list of extensions.
+*	Extensions are stored without the leading dot '.'.
 */
 class CASExtensionList
 {

@@ -8,11 +8,11 @@
 *
 *	@{
 */
-#define ASMOD_CFG_CONFIG	ASMOD_CFG_DIR "Config.txt"
-#define ASMOD_CFG_MODULES	ASMOD_CFG_DIR "Modules.txt"
-#define ASMOD_CFG_PLUGINS	ASMOD_CFG_DIR "Plugins.txt"
+#define ASMOD_CFG_CONFIG	( ASMOD_CFG_DIR "Config.txt" )
+#define ASMOD_CFG_MODULES	( ASMOD_CFG_DIR "Modules.txt" )
+#define ASMOD_CFG_PLUGINS	( ASMOD_CFG_DIR "Plugins.txt" )
 
-#define ASMOD_CFG_SCSUPPORT	ASMOD_CFG_DIR "SvenCoopSupport.txt"
+#define ASMOD_CFG_SCSUPPORT	( ASMOD_CFG_DIR "SvenCoopSupport.txt" )
 
 /** @} */
 

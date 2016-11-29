@@ -18,13 +18,13 @@ bool ParseAddress( kv::KV* pKV, TYPE& pOutPointer )
 {
 	pOutPointer = nullptr;
 
-	long long iValue = strtoll( pKV->GetValue().CStr(), nullptr, 16 );
+	long long iValue = strtoll( pKV->GetValue().c_str(), nullptr, 16 );
 
 	auto pPointer = reinterpret_cast<TYPE>( iValue );
 
 	if( !pPointer )
 	{
-		LOG_ERROR( PLID, "Memory address \"%p\" for \"%s\" is invalid", pPointer, pKV->GetKey().CStr() );
+		LOG_ERROR( PLID, "Memory address \"%p\" for \"%s\" is invalid", pPointer, pKV->GetKey().c_str() );
 		return false;
 	}
 

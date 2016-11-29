@@ -7,26 +7,29 @@
 
 namespace keyvalues
 {
-CKeyvalue::CKeyvalue( const char* const pszKey, const char* const pszValue )
-	: CKeyvalueNode( pszKey, NodeType::KEYVALUE )
+CKeyvalue::CKeyvalue( std::string&& szKey, std::string&& szValue )
+	: CKeyvalueNode( std::move( szKey ), NodeType::KEYVALUE )
 {
-	SetValue( pszValue );
+	SetValue( std::move( szValue ) );
 }
 
-void CKeyvalue::SetValue( const char* const pszValue )
+CKeyvalue::CKeyvalue( const std::string& szKey, const std::string& szValue )
+	: CKeyvalue( std::string( szKey ), std::string( szValue ) )
 {
-	assert( pszValue );
-
-	m_szValue = pszValue;
 }
 
-void CKeyvalue::SetValue( const CString& szValue )
+void CKeyvalue::SetValue( std::string&& szValue )
 {
-	SetValue( szValue.CStr() );
+	m_szValue = szValue;
+}
+
+void CKeyvalue::SetValue( const std::string& szValue )
+{
+	SetValue( std::string( szValue ) );
 }
 
 void CKeyvalue::Print( const size_t uiTabLevel ) const
 {
-	LOG_DEVELOPER( PLID, "%*s\"%s\" \"%s\"\n", static_cast<int>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "", GetKey().CStr(), m_szValue.CStr() );
+	LOG_DEVELOPER( PLID, "%*s\"%s\" \"%s\"\n", static_cast<int>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "", GetKey().c_str(), m_szValue.c_str() );
 }
 }

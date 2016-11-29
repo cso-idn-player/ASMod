@@ -2,39 +2,46 @@
 #define CKEYVALUENODE_H
 
 #include <cstdlib>
-
-#include "utility/CString.h"
+#include <string>
 
 #include "KeyvaluesConstants.h"
 
 namespace keyvalues
 {
 /**
-*	A single keyvalue node
+*	A single keyvalue node.
 */
 class CKeyvalueNode
 {
 public:
 	/**
 	*	Constructs a keyvalue node with a key.
-	*	@param pszKey Key. Must be non-null.
+	*	@param szKey Key.
 	*	@param type Node type.
 	*/
-	CKeyvalueNode( const char* const pszKey, const NodeType type );
+	CKeyvalueNode( std::string&& szKey, const NodeType type );
+
+	/**
+	*	@copydoc CKeyvalueNode( std::string&& szKey, const NodeType type );
+	*/
+	CKeyvalueNode( const std::string& szKey, const NodeType type );
 
 	virtual ~CKeyvalueNode() {}
 
-	const CString& GetKey() const { return m_szKey; }
+	/**
+	*	@return The node key.
+	*/
+	const std::string& GetKey() const { return m_szKey; }
 
 	/**
 	*	Sets the node key. Must be non-null.
 	*/
-	void SetKey( const char* const pszKey );
+	void SetKey( std::string&& szKey );
 
 	/**
-	*	@see SetKey( const char* const pszKey )
+	*	@copydoc SetKey( std::string&& szKey )
 	*/
-	void SetKey( const CString& szKey );
+	void SetKey( const std::string& szKey );
 
 	/**
 	*	Gets the node type.
@@ -45,7 +52,7 @@ public:
 	virtual void Print( const size_t uiTabLevel = 0 ) const = 0;
 
 private:
-	CString m_szKey;
+	std::string m_szKey;
 	const NodeType m_Type;
 
 private:

@@ -8,8 +8,8 @@
 namespace keyvalues
 {
 /**
-*	A single keyvalue block node
-*	Blocks have 0 or more child keyvalues
+*	A single keyvalue block node.
+*	Blocks have 0 or more child keyvalues.
 */
 class CKeyvalueBlock final : public CKeyvalueNode
 {
@@ -21,25 +21,14 @@ public:
 public:
 	/*
 	*	Constructs a keyvalue node with a key.
-	*	@param pszKey Key. Must be non-null.
+	*	@param szKey Key.
 	*/
-	CKeyvalueBlock( const char* const pszKey );
+	CKeyvalueBlock( std::string&& szKey );
 
 	/**
-	*	Constructs a keyvalue node with a key.
-	*	Children are set to the given list of children.
-	*	@param pszKey Key. Must be non-null.
-	*	@param children Children to add.
+	*	@copydoc CKeyvalueBlock( std::string&& szKey )
 	*/
-	CKeyvalueBlock( const char* const pszKey, const Children_t& children );
-
-	/**
-	*	Constructs a keyvalue node with a key.
-	*	The given child is made the first child.
-	*	@param pszKey Key. Must be non-null.
-	*	@param pFirstChild First child. Must be non-null.
-	*/
-	CKeyvalueBlock( const char* pszKey, CKeyvalueNode* pFirstChild );
+	CKeyvalueBlock( const std::string& szKey );
 
 	~CKeyvalueBlock();
 
@@ -100,14 +89,19 @@ public:
 	*	@param pszKey Key. Must be non-null.
 	*	@return If found, the value. Otherwise, an empty string.
 	*/
-	CString FindFirstKeyvalue( const char* pszKey ) const;
+	std::string FindFirstKeyvalue( const char* pszKey ) const;
 
 	/**
 	*	Adds a keyvalue.
 	*	@param pszKey Key. Must be non-null.
 	*	@param pszValue Value. Must be non-null. Maybe an empty string.
 	*/
-	void AddKeyvalue( const char* const pszKey, const char* const pszValue );
+	void AddKeyvalue( std::string&& szKey, std::string&& szValue );
+
+	/**
+	*	@copydoc AddKeyvalue( std::string&& szKey, std::string&& szValue )
+	*/
+	void AddKeyvalue( const std::string& szKey, const std::string& szValue );
 
 	//TODO: move
 	virtual void Print( const size_t uiTabLevel = 0 ) const override;

@@ -4,21 +4,25 @@
 
 namespace keyvalues
 {
-CKeyvalueNode::CKeyvalueNode( const char* const pszKey, const NodeType type )
+CKeyvalueNode::CKeyvalueNode( std::string&& szKey, const NodeType type )
 	: m_Type( type )
 {
-	SetKey( pszKey );
+	SetKey( std::move( szKey ) );
 }
 
-void CKeyvalueNode::SetKey( const char* const pszKey )
+CKeyvalueNode::CKeyvalueNode( const std::string& szKey, const NodeType type )
+	: m_Type( type )
 {
-	assert( pszKey );
-
-	m_szKey = pszKey;
+	SetKey( szKey );
 }
 
-void CKeyvalueNode::SetKey( const CString& szKey )
+void CKeyvalueNode::SetKey( std::string&& szKey )
 {
-	SetKey( szKey.CStr() );
+	m_szKey = std::move( szKey );
+}
+
+void CKeyvalueNode::SetKey( const std::string& szKey )
+{
+	SetKey( std::string( szKey ) );
 }
 }

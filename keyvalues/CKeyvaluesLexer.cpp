@@ -1,8 +1,8 @@
+#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <cstring>
 #include <cstdio>
-#include <algorithm>
 
 #include <extdll.h>
 #include <meta_api.h>
@@ -335,9 +335,9 @@ CKeyvaluesLexer::ReadResult CKeyvaluesLexer::ReadNextToken()
 
 			const size_t uiMaxSize = pszEnd - pszBegin;
 
-			m_szToken.Reserve( uiMaxSize );
+			m_szToken.reserve( uiMaxSize );
 
-			m_szToken.Clear();
+			m_szToken.clear();
 
 			for( size_t uiIndex = 0; uiIndex < uiMaxSize; )
 			{

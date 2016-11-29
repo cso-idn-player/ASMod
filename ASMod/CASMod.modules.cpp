@@ -98,13 +98,13 @@ bool CASMod::LoadModulesFromBlock( kv::Block& block )
 	{
 		if( pNode->GetType() != kv::NodeType::BLOCK )
 		{
-			LOG_DEVELOPER( PLID, "Encountered non-block node \"%s\", ignoring", pNode->GetKey().CStr() );
+			LOG_DEVELOPER( PLID, "Encountered non-block node \"%s\", ignoring", pNode->GetKey().c_str() );
 			continue;
 		}
 
 		if( pNode->GetKey() != "module" )
 		{
-			LOG_DEVELOPER( PLID, "Encountered block with unsupported name \"%s\", should be \"module\", ignoring", pNode->GetKey().CStr() );
+			LOG_DEVELOPER( PLID, "Encountered block with unsupported name \"%s\", should be \"module\", ignoring", pNode->GetKey().c_str() );
 			continue;
 		}
 
@@ -133,7 +133,7 @@ bool CASMod::LoadModuleFromBlock( kv::Block& block )
 
 	{
 		const auto result = snprintf( szModuleFilename, sizeof( szModuleFilename ), "%s/%s/%s%s",
-									  GetLoaderDirectory(), ASMOD_MODULES_DIR, pModulePath->GetValue().CStr(), PLATFORM_DLEXT );
+									  GetLoaderDirectory(), ASMOD_MODULES_DIR, pModulePath->GetValue().c_str(), PLATFORM_DLEXT );
 
 		if( !PrintfSuccess( result, sizeof( szModuleFilename ) ) )
 		{

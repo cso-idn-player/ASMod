@@ -263,14 +263,14 @@ void CASMod::ApplyConfig( kv::Block& block )
 
 		if( pForceLocalEnvironment )
 		{
-			m_EnvType = atoi( pForceLocalEnvironment->GetValue().CStr() ) != 0 ? EnvType::LOCAL : EnvType::DEFAULT;
+			m_EnvType = atoi( pForceLocalEnvironment->GetValue().c_str() ) != 0 ? EnvType::LOCAL : EnvType::DEFAULT;
 		}
 
 		auto pSvenCoopHack = pLoader->FindFirstChild<kv::KV>( "svenCoopHack" );
 
 		if( pSvenCoopHack )
 		{
-			m_EnvType = atoi( pSvenCoopHack->GetValue().CStr() ) != 0 ? EnvType::SVENCOOP_HACK : m_EnvType;
+			m_EnvType = atoi( pSvenCoopHack->GetValue().c_str() ) != 0 ? EnvType::SVENCOOP_HACK : m_EnvType;
 		}
 	}
 

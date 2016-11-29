@@ -31,10 +31,10 @@ void CASPluginManager::ApplyConfig( kv::Block& block )
 
 			if( pPluginFallbackPath )
 			{
-				if( UTIL_SafeStrncpy( m_szPluginFallbackPath, pPluginFallbackPath->GetValue().CStr(), sizeof( m_szPluginFallbackPath ) ) )
+				if( UTIL_SafeStrncpy( m_szPluginFallbackPath, pPluginFallbackPath->GetValue().c_str(), sizeof( m_szPluginFallbackPath ) ) )
 					LOG_MESSAGE( PLID, "Using Plugin fallback path \"%s\"", m_szPluginFallbackPath );
 				else
-					LOG_ERROR( PLID, "Plugin fallback path \"%s\" is too long!", pPluginFallbackPath->GetValue().CStr() );
+					LOG_ERROR( PLID, "Plugin fallback path \"%s\" is too long!", pPluginFallbackPath->GetValue().c_str() );
 			}
 
 			for( auto pHeader : pCurrentGame->GetChildrenByKey( "header" ) )
@@ -45,7 +45,7 @@ void CASPluginManager::ApplyConfig( kv::Block& block )
 					continue;
 				}
 
-				m_PluginHeaders.emplace_back( static_cast<kv::KV*>( pHeader )->GetValue().CStr() );
+				m_PluginHeaders.emplace_back( static_cast<kv::KV*>( pHeader )->GetValue().c_str() );
 			}
 		}
 	}
@@ -146,11 +146,11 @@ bool CASPluginManager::LoadPluginFromBlock( kv::Block& block )
 
 	if( !pScript )
 	{
-		LOG_MESSAGE( PLID, "Couldn't find any scripts to load for plugin \"%s\"", pName->GetValue().CStr() );
+		LOG_MESSAGE( PLID, "Couldn't find any scripts to load for plugin \"%s\"", pName->GetValue().c_str() );
 		return false;
 	}
 
-	return LoadPlugin( pName->GetValue().CStr(), pScript->GetValue().CStr() );
+	return LoadPlugin( pName->GetValue().c_str(), pScript->GetValue().c_str() );
 }
 
 bool CASPluginManager::LoadPlugin( const char* const pszPluginName, const char* const pszScriptName )

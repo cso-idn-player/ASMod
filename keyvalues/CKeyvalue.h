@@ -6,7 +6,7 @@
 namespace keyvalues
 {
 /**
-* A single keyvalue
+*	A single keyvalue.
 */
 class CKeyvalue final : public CKeyvalueNode
 {
@@ -16,32 +16,37 @@ public:
 public:
 	/**
 	*	Constructs a keyvalue with a key and an optional value.
-	*	@param pszKey Key. Must be non-null.
-	*	@param pszValue Value. Must be non-null.
+	*	@param pszKey Key.
+	*	@param pszValue Value.
 	*/
-	CKeyvalue( const char* const pszKey, const char* const pszValue = "" );
+	CKeyvalue( std::string&& szKey, std::string&& szValue = "" );
 
 	/**
-	*	Gets the value.
+	*	@copydoc CKeyvalue( std::string&& szKey, std::string&& szValue = "" )
 	*/
-	const CString& GetValue() const { return m_szValue; }
+	CKeyvalue( const std::string& szKey, const std::string& szValue = "" );
+
+	/**
+	*	@return The value.
+	*/
+	const std::string& GetValue() const { return m_szValue; }
 
 	/**
 	*	Sets the value.
 	*	@param pszValue Value. Must be non-null.
 	*/
-	void SetValue( const char* const pszValue );
+	void SetValue( std::string&& szValue );
 
 	/**
 	*	@see SetValue( const char* const pszValue )
 	*/
-	void SetValue( const CString& szValue );
+	void SetValue( const std::string& szValue );
 
 	//TODO: move
 	virtual void Print( const size_t uiTabLevel = 0 ) const override;
 
 private:
-	CString m_szValue;
+	std::string m_szValue;
 
 private:
 	CKeyvalue( const CKeyvalue& ) = delete;

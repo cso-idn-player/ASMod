@@ -8,23 +8,14 @@
 
 namespace keyvalues
 {
-CKeyvalueBlock::CKeyvalueBlock( const char* const pszKey )
-	: BaseClass( pszKey, NodeType::BLOCK )
+CKeyvalueBlock::CKeyvalueBlock( std::string&& szKey )
+	: BaseClass( std::move( szKey ), NodeType::BLOCK )
 {
 }
 
-CKeyvalueBlock::CKeyvalueBlock( const char* const pszKey, const Children_t& children )
-	: CKeyvalueBlock( pszKey )
+CKeyvalueBlock::CKeyvalueBlock( const std::string& szKey )
+	: CKeyvalueBlock( std::string( szKey ) )
 {
-	SetChildren( children );
-}
-
-CKeyvalueBlock::CKeyvalueBlock( const char* const pszKey, CKeyvalueNode* pFirstChild )
-	: CKeyvalueBlock( pszKey )
-{
-	assert( pFirstChild );
-
-	m_Children.push_back( pFirstChild );
 }
 
 CKeyvalueBlock::~CKeyvalueBlock()
@@ -93,7 +84,7 @@ CKeyvalueNode* CKeyvalueBlock::FindFirstChild( const char* const pszKey ) const
 
 	for( const auto pChild : m_Children )
 	{
-		if( strcmp( pszKey, pChild->GetKey().CStr() ) == 0 )
+		if( strcmp( pszKey, pChild->GetKey().c_str() ) == 0 )
 			return pChild;
 	}
 
@@ -108,7 +99,7 @@ CKeyvalueNode* CKeyvalueBlock::FindFirstChild( const char* const pszKey, const N
 	{
 		if( pChild->GetType() == type )
 		{
-			if( strcmp( pszKey, pChild->GetKey().CStr() ) == 0 )
+			if( strcmp( pszKey, pChild->GetKey().c_str() ) == 0 )
 				return pChild;
 		}
 	}
@@ -116,7 +107,7 @@ CKeyvalueNode* CKeyvalueBlock::FindFirstChild( const char* const pszKey, const N
 	return nullptr;
 }
 
-CString CKeyvalueBlock::FindFirstKeyvalue( const char* const pszKey ) const
+std::string CKeyvalueBlock::FindFirstKeyvalue( const char* const pszKey ) const
 {
 	if( pszKey && *pszKey )
 	{
@@ -128,7 +119,7 @@ CString CKeyvalueBlock::FindFirstKeyvalue( const char* const pszKey ) const
 			{
 				CKeyvalue* pKV = static_cast<CKeyvalue*>( *it );
 
-				if( strcmp( pszKey, pKV->GetKey().CStr() ) == 0 )
+				if( strcmp( pszKey, pKV->GetKey().c_str() ) == 0 )
 					return pKV->GetValue();
 			}
 		}
@@ -137,17 +128,19 @@ CString CKeyvalueBlock::FindFirstKeyvalue( const char* const pszKey ) const
 	return "";
 }
 
-void CKeyvalueBlock::AddKeyvalue( const char* const pszKey, const char* const pszValue )
+void CKeyvalueBlock::AddKeyvalue( std::string&& szKey, std::string&& szValue )
 {
-	assert( pszKey );
-	assert( pszValue );
+	m_Children.emplace_back( new CKeyvalue( std::move( szKey ), std::move( szValue ) ) );
+}
 
-	m_Children.emplace_back( new CKeyvalue( pszKey, pszValue ) );
+void CKeyvalueBlock::AddKeyvalue( const std::string& szKey, const std::string& szValue )
+{
+	AddKeyvalue( std::string( szKey ), std::string( szValue ) );
 }
 
 void CKeyvalueBlock::Print( const size_t uiTabLevel ) const
 {
-	LOG_DEVELOPER( PLID, "%*s\"%s\"\n%*s{\n", static_cast<int>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "", GetKey().CStr(), static_cast<size_t>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "" );
+	LOG_DEVELOPER( PLID, "%*s\"%s\"\n%*s{\n", static_cast<int>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "", GetKey().c_str(), static_cast<size_t>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "" );
 
 	PrintChildren( uiTabLevel + 1 );
 

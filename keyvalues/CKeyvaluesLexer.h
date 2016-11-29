@@ -51,6 +51,9 @@ public:
 	*/
 	CKeyvaluesLexer( const char* const pszFilename );
 
+	CKeyvaluesLexer( CKeyvaluesLexer&& other ) = default;
+	CKeyvaluesLexer& operator=( CKeyvaluesLexer&& other ) = default;
+
 	/**
 	*	Returns whether the lexer has any input data.
 	*/
@@ -125,7 +128,7 @@ private:
 
 private:
 	Memory_t			m_Memory;
-	const char*			m_pszCurrentPosition;
+	const char*			m_pszCurrentPosition = nullptr;
 
 	std::stringstream m_Stream;
 

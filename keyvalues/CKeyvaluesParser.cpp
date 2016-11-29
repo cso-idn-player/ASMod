@@ -15,6 +15,7 @@ const char* CKeyvaluesParser::ParseResultToString( const ParseResult result )
 	case ParseResult::SUCCESS:			return "Success";
 	case ParseResult::UNEXPECTED_EOB:	return "Unexpected End Of Buffer";
 	case ParseResult::FORMAT_ERROR:		return "Format Error";
+	case ParseResult::END_OF_BLOCK:		return "End Of Block";
 
 	case ParseResult::UNKNOWN_ERROR:	return "Unknown Error";
 	}
@@ -61,13 +62,17 @@ CKeyvaluesParser::ParseResult CKeyvaluesParser::Parse()
 
 	if( result == ParseResult::SUCCESS )
 	{
-		if( pRootNode->GetType() == NodeType::BLOCK )
-			m_Keyvalues.reset( static_cast<CKeyvalueBlock*>( pRootNode ) );
-		else
+		//Could've been an empty file.
+		if( pRootNode )
 		{
-			m_Logger( "CKeyvaluesParser::Parse: Data does not contain keyvalues\n" );
-			delete pRootNode;
-			result = ParseResult::FORMAT_ERROR;
+			if( pRootNode->GetType() == NodeType::BLOCK )
+				m_Keyvalues.reset( static_cast<CKeyvalueBlock*>( pRootNode ) );
+			else
+			{
+				m_Logger( "CKeyvaluesParser::Parse: Data does not contain keyvalues\n" );
+				delete pRootNode;
+				result = ParseResult::FORMAT_ERROR;
+			}
 		}
 	}
 	else

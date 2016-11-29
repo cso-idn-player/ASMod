@@ -8,7 +8,6 @@
 namespace keyvalues
 {
 CKeyvaluesLexer::CKeyvaluesLexer()
-	: m_pszCurrentPosition( nullptr )
 {
 }
 
@@ -22,7 +21,6 @@ CKeyvaluesLexer::CKeyvaluesLexer( Memory_t&& memory )
 }
 
 CKeyvaluesLexer::CKeyvaluesLexer( const char* const pszFilename )
-	: m_pszCurrentPosition( nullptr )
 {
 	assert( pszFilename );
 

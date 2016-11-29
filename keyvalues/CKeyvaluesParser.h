@@ -11,8 +11,9 @@ class CKeyvalueNode;
 class CKeyvalueBlock;
 
 /**
-*	Can parse in keyvalues text data and transform it into hierarchical data structures
-*	Internally uses CKeyvaluesLexer to tokenize the buffer's data
+*	Can parse in keyvalues text data and transform it into hierarchical data structures.
+*	Internally uses CKeyvaluesLexer to tokenize the buffer's data.
+*	Can be used to parse multiple top level blocks out of a file by repeatedly calling Parse until GetKeyvalues() returns null.
 */
 class CKeyvaluesParser
 {
@@ -24,8 +25,16 @@ public:
 	{
 		SUCCESS,
 		UNKNOWN_ERROR,
+
+		/**
+		*	Encountered the end of the buffer while still parsing data.
+		*/
 		UNEXPECTED_EOB,
 		FORMAT_ERROR,
+
+		/**
+		*	The end of a block was reached.
+		*/
 		END_OF_BLOCK
 	};
 
@@ -47,6 +56,9 @@ public:
 	*	Construct a parser that will parse the given file
 	*/
 	CKeyvaluesParser( const char* const pszFilename );
+
+	CKeyvaluesParser( CKeyvaluesParser&& other ) = default;
+	CKeyvaluesParser& operator=( CKeyvaluesParser&& other ) = default;
 
 	/**
 	*	Returns whether the parser has any input data.

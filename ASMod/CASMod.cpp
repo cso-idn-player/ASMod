@@ -72,7 +72,7 @@ bool CASMod::Initialize()
 		}
 	}
 
-	if( !LoadConfig( ASMOD_CONFIG_FILENAME, false ) )
+	if( !LoadConfig( ASMOD_CFG_CONFIG, false ) )
 		return false;
 
 	if( !LoadGameModule() )
@@ -400,7 +400,7 @@ bool CASMod::SetupEnvironment()
 	{
 		LOG_MESSAGE( PLID, "Using Sven Co-op hack to acquire environment" );
 
-		sc::CSvenCoopSupport support( ASMOD_SCSUPPORT_FILENAME );
+		sc::CSvenCoopSupport support( ASMOD_CFG_SCSUPPORT );
 
 		if( !support.IsConfigLoaded() )
 		{

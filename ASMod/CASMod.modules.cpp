@@ -15,7 +15,7 @@ bool CASMod::LoadModules()
 {
 	LOG_MESSAGE( PLID, "Loading ASMod modules" );
 
-	const char* pszModulesFilename = ASMOD_MODULES_FILENAME;
+	const char* pszModulesFilename = ASMOD_CFG_MODULES;
 	const bool bOptional = false;
 
 	if( !pszModulesFilename || !( *pszModulesFilename ) )

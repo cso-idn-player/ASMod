@@ -13,7 +13,7 @@
 namespace keyvalues
 {
 /**
-*	A lexer that can read in keyvalues text data and tokenize it
+*	A lexer that can read in keyvalues text data and tokenize it.
 */
 class CKeyvaluesLexer
 {
@@ -39,12 +39,11 @@ public:
 	CKeyvaluesLexer();
 
 	/**
-	*	Constructs a lexer that will read from the given memory
-	*	The given memory will be empty after this constructor returns
-	*	Expects a text buffer with all newlines normalized to \n
+	*	Constructs a lexer that will read from the given memory.
+	*	The given memory will be empty after this constructor returns.
 	*	@param memory Memory to use. The original memory buffer is no longer valid after this constructor returns.
 	*/
-	CKeyvaluesLexer( Memory_t& memory );
+	CKeyvaluesLexer( Memory_t&& memory );
 
 	/**
 	*	Constructs a lexer that will read from the given file

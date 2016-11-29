@@ -1,11 +1,7 @@
-#include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <cstring>
 #include <cstdio>
-
-#include <extdll.h>
-#include <meta_api.h>
+#include <cstring>
 
 #include "CKeyvaluesLexer.h"
 
@@ -16,11 +12,11 @@ CKeyvaluesLexer::CKeyvaluesLexer()
 {
 }
 
-CKeyvaluesLexer::CKeyvaluesLexer( Memory_t& memory )
+CKeyvaluesLexer::CKeyvaluesLexer( Memory_t&& memory )
 {
 	assert( memory.HasMemory() );
 
-	m_Memory.Swap( memory );
+	m_Memory = std::move( memory );
 
 	m_pszCurrentPosition = reinterpret_cast<const char*>( m_Memory.GetMemory() );
 }

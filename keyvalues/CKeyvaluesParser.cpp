@@ -29,8 +29,8 @@ CKeyvaluesParser::CKeyvaluesParser()
 {
 }
 
-CKeyvaluesParser::CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory)
-	: m_Lexer( memory )
+CKeyvaluesParser::CKeyvaluesParser( CKeyvaluesLexer::Memory_t&& memory)
+	: m_Lexer( std::move( memory ) )
 {
 }
 
@@ -39,10 +39,10 @@ CKeyvaluesParser::CKeyvaluesParser( const char* const pszFilename)
 {
 }
 
-void CKeyvaluesParser::Initialize( CKeyvaluesLexer::Memory_t& memory )
+void CKeyvaluesParser::Initialize( CKeyvaluesLexer::Memory_t&& memory )
 {
 	//This object will clean up the old state when it destructs
-	CKeyvaluesLexer cleanup( memory );
+	CKeyvaluesLexer cleanup( std::move( memory ) );
 
 	m_Lexer.Swap( cleanup );
 

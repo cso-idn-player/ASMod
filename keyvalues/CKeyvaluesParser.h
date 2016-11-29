@@ -41,7 +41,7 @@ public:
 	/**
 	*	Construct a parser that will parse from the given memory buffer
 	*/
-	CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory );
+	CKeyvaluesParser( CKeyvaluesLexer::Memory_t&& memory );
 
 	/**
 	*	Construct a parser that will parse the given file
@@ -61,7 +61,7 @@ public:
 	/**
 	*	Initialize or reinitialize the memory buffer.
 	*/
-	void Initialize( CKeyvaluesLexer::Memory_t& memory );
+	void Initialize( CKeyvaluesLexer::Memory_t&& memory );
 
 	/**
 	*	Gets the escape sequences conversion object.

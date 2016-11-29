@@ -1,15 +1,16 @@
 #ifndef CMEMORY_H
 #define CMEMORY_H
 
-#include <cstdlib>
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <type_traits>
 
 /**
-* Lightweight memory management class
-* Can store owned or non-owned memory
-* If this owns the given memory, it assumes the memory was allocated as an array
+*	Lightweight memory management class
+*	Can store owned or non-owned memory
+*	If this owns the given memory, it assumes the memory was allocated as an array
 */
 template<typename SIZE_TYPE>
 class CMemory
@@ -22,18 +23,37 @@ public:
 	CMemory( const size_type uiSizeInBytes = 0 )
 		: m_pMemory( nullptr )
 		, m_uiSize( 0 )
-		, m_fOwnsMemory( false )
+		, m_bOwnsMemory( false )
 	{
 		Init( uiSizeInBytes );
 	}
 
 	template<typename T>
-	CMemory( T* pMemory, const size_type uiSizeInBytes, bool fOwnsMemory = true )
+	CMemory( T* pMemory, const size_type uiSizeInBytes, bool bOwnsMemory = true )
 		: m_pMemory( nullptr )
 		, m_uiSize( 0 )
-		, m_fOwnsMemory( false )
+		, m_bOwnsMemory( false )
 	{
-		Init( pMemory, uiSizeInBytes, fOwnsMemory );
+		Init( pMemory, uiSizeInBytes, bOwnsMemory );
+	}
+
+	CMemory( CMemory&& other )
+		: m_pMemory( other.m_pMemory )
+		, m_uiSize( other.m_uiSize )
+		, m_bOwnsMemory( other.m_bOwnsMemory )
+	{
+		memset( &other, 0, sizeof( other ) );
+	}
+
+	CMemory& operator=( CMemory&& other )
+	{
+		if( this != &other )
+		{
+			Release();
+			Swap( other );
+		}
+
+		return *this;
 	}
 
 	~CMemory()
@@ -49,10 +69,10 @@ public:
 
 	size_type GetSize() const { return m_uiSize; }
 
-	bool OwnsMemory() const { return m_fOwnsMemory; }
+	bool OwnsMemory() const { return m_bOwnsMemory; }
 
 	template<typename T>
-	CMemory& Init( T* pMemory, const size_type uiSizeInBytes, bool fOwnsMemory = true )
+	CMemory& Init( T* pMemory, const size_type uiSizeInBytes, bool bOwnsMemory = true )
 	{
 		Release();
 
@@ -60,7 +80,7 @@ public:
 		{
 			m_pMemory = reinterpret_cast<DataType_t*>( const_cast<typename std::remove_const<T>::type*>( pMemory ) );
 			m_uiSize = uiSizeInBytes;
-			m_fOwnsMemory = fOwnsMemory;
+			m_bOwnsMemory = bOwnsMemory;
 		}
 
 		return *this;
@@ -79,17 +99,17 @@ public:
 
 		m_uiSize = uiSizeInBytes;
 
-		m_fOwnsMemory = true;
+		m_bOwnsMemory = true;
 
 		return *this;
 	}
 
 	void Release()
 	{
-		if( m_fOwnsMemory )
+		if( m_bOwnsMemory )
 		{
 			delete[] m_pMemory;
-			m_fOwnsMemory = false;
+			m_bOwnsMemory = false;
 		}
 
 		m_pMemory = nullptr;
@@ -102,7 +122,7 @@ public:
 		{
 			std::swap( m_pMemory, other.m_pMemory );
 			std::swap( m_uiSize, other.m_uiSize );
-			std::swap( m_fOwnsMemory, other.m_fOwnsMemory );
+			std::swap( m_bOwnsMemory, other.m_bOwnsMemory );
 		}
 	}
 
@@ -150,7 +170,7 @@ public:
 private:
 	DataType_t* m_pMemory;	//Memory that we own.
 	size_type m_uiSize;		//Size, in bytes, of the memory that we own
-	bool m_fOwnsMemory;		//Whether we own this memory
+	bool m_bOwnsMemory;		//Whether we own this memory
 
 private:
 	CMemory( const CMemory& ) = delete;

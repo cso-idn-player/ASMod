@@ -5,6 +5,8 @@
 
 #include "keyvalues/Keyvalues.h"
 
+#include "StringUtils.h"
+
 #include "CASMod.h"
 
 #include "SvenCoopSupport.h"

@@ -42,9 +42,6 @@ public:
 	*/
 	void SetValue( const std::string& szValue );
 
-	//TODO: move
-	virtual void Print( const size_t uiTabLevel = 0 ) const override;
-
 private:
 	std::string m_szValue;
 

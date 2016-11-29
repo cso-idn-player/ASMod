@@ -48,9 +48,6 @@ public:
 	*/
 	NodeType GetType() const { return m_Type; }
 
-	//TODO: move this out of the class
-	virtual void Print( const size_t uiTabLevel = 0 ) const = 0;
-
 private:
 	std::string m_szKey;
 	const NodeType m_Type;

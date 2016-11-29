@@ -1,8 +1,5 @@
 #include <cassert>
 
-#include <extdll.h>
-#include <meta_api.h>
-
 #include "CKeyvalue.h"
 #include "CKeyvalueBlock.h"
 
@@ -136,20 +133,5 @@ void CKeyvalueBlock::AddKeyvalue( std::string&& szKey, std::string&& szValue )
 void CKeyvalueBlock::AddKeyvalue( const std::string& szKey, const std::string& szValue )
 {
 	AddKeyvalue( std::string( szKey ), std::string( szValue ) );
-}
-
-void CKeyvalueBlock::Print( const size_t uiTabLevel ) const
-{
-	LOG_DEVELOPER( PLID, "%*s\"%s\"\n%*s{\n", static_cast<int>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "", GetKey().c_str(), static_cast<size_t>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "" );
-
-	PrintChildren( uiTabLevel + 1 );
-
-	LOG_DEVELOPER( PLID, "%*s}\n", static_cast<int>( uiTabLevel * KEYVALUE_TAB_WIDTH ), "" );
-}
-
-void CKeyvalueBlock::PrintChildren( const size_t uiTabLevel ) const
-{
-	for( Children_t::const_iterator it = m_Children.begin(), end = m_Children.end(); it != end; ++it )
-		( *it )->Print( uiTabLevel );
 }
 }

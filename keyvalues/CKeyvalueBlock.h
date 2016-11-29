@@ -103,11 +103,6 @@ public:
 	*/
 	void AddKeyvalue( const std::string& szKey, const std::string& szValue );
 
-	//TODO: move
-	virtual void Print( const size_t uiTabLevel = 0 ) const override;
-
-	void PrintChildren( const size_t uiTabLevel = 0 ) const;
-
 private:
 	Children_t m_Children;
 

@@ -6,7 +6,7 @@
 
 namespace keyvalues
 {
-const char* CBaseKeyvaluesParser::ParseResultToString( const ParseResult result )
+const char* CKeyvaluesParser::ParseResultToString( const ParseResult result )
 {
 	switch( result )
 	{
@@ -20,56 +20,62 @@ const char* CBaseKeyvaluesParser::ParseResultToString( const ParseResult result 
 	}
 }
 
-CBaseKeyvaluesParser::CBaseKeyvaluesParser( const CKeyvaluesParserSettings& settings, const bool fIsIterative )
+CKeyvaluesParser::CKeyvaluesParser( const CKeyvaluesParserSettings& settings )
 	: m_Lexer()
-	, m_iCurrentDepth( 0 )
 	, m_Settings( settings )
-	, m_fIsIterative( fIsIterative )
 {
-	Construct();
 }
 
-CBaseKeyvaluesParser::CBaseKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings, const bool fIsIterative )
+CKeyvaluesParser::CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings )
 	: m_Lexer( memory )
-	, m_iCurrentDepth( 0 )
 	, m_Settings( settings )
-	, m_fIsIterative( fIsIterative )
 {
-	Construct();
 }
 
-CBaseKeyvaluesParser::CBaseKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings, const bool fIsIterative )
+CKeyvaluesParser::CKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings )
 	: m_Lexer( pszFilename )
-	, m_iCurrentDepth( 0 )
 	, m_Settings( settings )
-	, m_fIsIterative( fIsIterative )
 {
-	Construct();
 }
 
-void CBaseKeyvaluesParser::Construct()
-{
-	//TODO: this sucks
-	if( m_fIsIterative )
-		++m_iCurrentDepth;
-}
-
-size_t CBaseKeyvaluesParser::GetReadOffset() const
+size_t CKeyvaluesParser::GetReadOffset() const
 {
 	return m_Lexer.GetReadOffset();
 }
 
-void CBaseKeyvaluesParser::Initialize( CKeyvaluesLexer::Memory_t& memory )
+void CKeyvaluesParser::Initialize( CKeyvaluesLexer::Memory_t& memory )
 {
 	//This object will clean up the old state when it destructs
 	CKeyvaluesLexer cleanup( memory );
 
 	m_Lexer.Swap( cleanup );
 
-	m_iCurrentDepth = m_fIsIterative ? 1 : 0;
+	m_iCurrentDepth = 0;
+
+	m_Keyvalues.reset();
 }
 
-CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::ParseNext( CKeyvalueNode*& pNode, bool fParseFirst )
+CKeyvaluesParser::ParseResult CKeyvaluesParser::Parse()
+{
+	m_Keyvalues.reset();
+
+	auto pRootNode = new CKeyvalueBlock( "" );
+
+	ParseResult result = ParseBlock( pRootNode, true );
+
+	if( result == ParseResult::SUCCESS )
+	{
+		m_Keyvalues.reset( pRootNode );
+	}
+	else
+	{
+		delete pRootNode;
+	}
+
+	return result;
+}
+
+CKeyvaluesParser::ParseResult CKeyvaluesParser::ParseNext( CKeyvalueNode*& pNode, bool fParseFirst )
 {
 	ParseResult parseResult;
 
@@ -145,7 +151,7 @@ CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::ParseNext( CKeyvalueNode
 	return parseResult;
 }
 
-CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::ParseBlock( CKeyvalueBlock*& pBlock, bool fIsRoot )
+CKeyvaluesParser::ParseResult CKeyvaluesParser::ParseBlock( CKeyvalueBlock*& pBlock, bool fIsRoot )
 {
 	++m_iCurrentDepth;
 
@@ -231,7 +237,7 @@ CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::ParseBlock( CKeyvalueBlo
 	return parseResult;
 }
 
-CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::GetResultFor( const CKeyvaluesLexer::ReadResult result, bool fExpectedMore ) const
+CKeyvaluesParser::ParseResult CKeyvaluesParser::GetResultFor( const CKeyvaluesLexer::ReadResult result, bool fExpectedMore ) const
 {
 	switch( result )
 	{
@@ -243,107 +249,9 @@ CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::GetResultFor( const CKey
 	}
 }
 
-CKeyvaluesParser::CKeyvaluesParser( const CKeyvaluesParserSettings& settings )
-	: BaseClass( settings, false )
-{
-}
-
-CKeyvaluesParser::CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings )
-	: BaseClass( memory, settings, false )
-{
-}
-
-CKeyvaluesParser::CKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings )
-	: BaseClass( pszFilename, settings, false )
-{
-}
-
-CKeyvaluesParser::~CKeyvaluesParser()
-{
-	delete m_pKeyvalues;
-}
 
 CKeyvalueBlock* CKeyvaluesParser::ReleaseKeyvalues()
 {
-	if( !m_pKeyvalues )
-		return nullptr;
-
-	auto pKeyvalues = m_pKeyvalues;
-
-	m_pKeyvalues = nullptr;
-
-	return pKeyvalues;
-}
-
-void CKeyvaluesParser::Initialize( CKeyvaluesLexer::Memory_t& memory )
-{
-	CBaseKeyvaluesParser::Initialize( memory );
-
-	if( m_pKeyvalues )
-	{
-		delete m_pKeyvalues;
-		m_pKeyvalues = nullptr;
-	}
-}
-
-CKeyvaluesParser::ParseResult CKeyvaluesParser::Parse()
-{
-	if( m_pKeyvalues )
-	{
-		delete m_pKeyvalues;
-		m_pKeyvalues = nullptr;
-	}
-
-	auto pRootNode = new CKeyvalueBlock( "" );
-
-	ParseResult result = ParseBlock( pRootNode, true );
-
-	if( result == ParseResult::SUCCESS )
-	{
-		m_pKeyvalues = pRootNode;
-	}
-	else
-	{
-		delete pRootNode;
-	}
-
-	return result;
-}
-
-CIterativeKeyvaluesParser::CIterativeKeyvaluesParser( const CKeyvaluesParserSettings& settings )
-	: BaseClass( settings, true )
-{
-}
-
-CIterativeKeyvaluesParser::CIterativeKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings )
-	: BaseClass( memory, settings, true )
-{
-}
-
-CIterativeKeyvaluesParser::CIterativeKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings )
-	: BaseClass( pszFilename, settings, true )
-{
-}
-
-CIterativeKeyvaluesParser::ParseResult CIterativeKeyvaluesParser::ParseBlock( CKeyvalueBlock*& pBblock )
-{
-	pBblock = nullptr;
-
-	CKeyvalueNode* pNode;
-
-	ParseResult result = ParseNext( pNode, true );
-
-	if( result != ParseResult::SUCCESS )
-		return result;
-
-	if( pNode->GetType() != NodeType::BLOCK )
-	{
-		delete pNode;
-		return ParseResult::WRONG_NODE_TYPE;
-	}
-
-	pBblock = static_cast<CKeyvalueBlock*>( pNode );
-
-	return ParseResult::SUCCESS;
+	return m_Keyvalues.release();
 }
 }

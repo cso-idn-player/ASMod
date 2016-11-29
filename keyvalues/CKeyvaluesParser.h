@@ -1,6 +1,8 @@
 #ifndef CKEYVALUESPARSER_H
 #define CKEYVALUESPARSER_H
 
+#include <memory>
+
 #include "CKeyvaluesLexer.h"
 
 namespace keyvalues
@@ -21,7 +23,7 @@ struct CKeyvaluesParserSettings final
 *	Can parse in keyvalues text data and transform it into hierarchical data structures
 *	Internally uses CKeyvaluesLexer to tokenize the buffer's data
 */
-class CBaseKeyvaluesParser
+class CKeyvaluesParser
 {
 public:
 	/**
@@ -39,6 +41,22 @@ public:
 	static const char* ParseResultToString( const ParseResult result );
 
 public:
+	/**
+	*	Construct an empty parser
+	*	An empty parser will return empty, but valid data structures
+	*/
+	CKeyvaluesParser( const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
+
+	/**
+	*	Construct a parser that will parse from the given memory buffer
+	*/
+	CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
+
+	/**
+	*	Construct a parser that will parse the given file
+	*/
+	CKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
+
 	/**
 	*	Gets the parser settings.
 	*/
@@ -75,103 +93,20 @@ public:
 		m_Lexer.SetLogger( CLogger( m_Logger ) );
 	}
 
-protected:
-	/**
-	*	Construct an empty parser
-	*	An empty parser will return empty, but valid data structures
-	*/
-	CBaseKeyvaluesParser( const CKeyvaluesParserSettings& settings, const bool fIsIterative );
-
-	/**
-	*	Construct a parser that will parse from the given memory buffer
-	*/
-	CBaseKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings, const bool fIsIterative );
-
-	/**
-	*	Construct a parser that will parse the given file
-	*/
-	CBaseKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings, const bool fIsIterative );
-
-	ParseResult ParseNext( CKeyvalueNode*& pNode, bool fParseFirst );
-
-	ParseResult ParseBlock( CKeyvalueBlock*& pBlock, bool fIsRoot );
-
-private:
-	void Construct();
-
-	ParseResult GetResultFor( const CKeyvaluesLexer::ReadResult result, bool fExpectedMore = false ) const;
-
-private:
-	CKeyvaluesLexer m_Lexer;
-
-	/*
-	* How deep we are in the parsing process.
-	* If a keyvalue exists in the global scope, we're 1 level deep.
-	* If we're inside a block that has no parent, we're 2 levels deep.
-	*/
-	int m_iCurrentDepth;
-
-	CKeyvaluesParserSettings m_Settings;
-
-	CLogger m_Logger;
-
-	const bool m_fIsIterative;	//Required to make sure the current depth setting is valid for iterative calls
-
-private:
-	CBaseKeyvaluesParser( const CBaseKeyvaluesParser& ) = delete;
-	CBaseKeyvaluesParser& operator=( const CBaseKeyvaluesParser& ) = delete;
-};
-
-/**
-*	Parser that can parse in an entire keyvalues file at once
-*/
-class CKeyvaluesParser final : public CBaseKeyvaluesParser
-{
-public:
-	typedef CBaseKeyvaluesParser BaseClass;
-
-public:
-	/**
-	*	Constructs an empty parser with the given settings.
-	*	@param settings Parser settings.
-	*/
-	CKeyvaluesParser( const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
-
-	/**
-	*	Constructs a parser that reads from the given memory, and that has the given settings.
-	*	@param memory Memory to read from.
-	*	@param settings Parser settings.
-	*/
-	CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
-
-	/**
-	*	Constructs a parser that reads from the given file, and that has the given settings.
-	*	@param pszFilename Name of the file to read from.
-	*	@param settings Parser settings.
-	*/
-	CKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
-
-	~CKeyvaluesParser();
-
 	/**
 	*	Gets the root keyvalues block.
 	*/
-	const CKeyvalueBlock* GetKeyvalues() const { return m_pKeyvalues; }
+	const CKeyvalueBlock* GetKeyvalues() const { return m_Keyvalues.get(); }
 
 	/**
 	*	@see GetKeyvalues() const
 	*/
-	CKeyvalueBlock* GetKeyvalues() { return m_pKeyvalues; }
+	CKeyvalueBlock* GetKeyvalues() { return m_Keyvalues.get(); }
 
 	/**
 	*	Releases ownership of the parser's keyvalues and returns them.
 	*/
 	CKeyvalueBlock* ReleaseKeyvalues();
-
-	/**
-	*	Initializes or reinitializes the parser with the given memory.
-	*/
-	void Initialize( CKeyvaluesLexer::Memory_t& memory );
 
 	/**
 	*	Parses in the entire buffer
@@ -183,42 +118,31 @@ public:
 	ParseResult Parse();
 
 private:
-	CKeyvalueBlock* m_pKeyvalues = nullptr;
-};
+	ParseResult ParseNext( CKeyvalueNode*& pNode, bool fParseFirst );
 
-/**
-*	Parser that can parse in a keyvalues file one block at a time
-*/
-class CIterativeKeyvaluesParser final : public CBaseKeyvaluesParser
-{
-public:
-	typedef CBaseKeyvaluesParser BaseClass;
+	ParseResult ParseBlock( CKeyvalueBlock*& pBlock, bool fIsRoot );
 
-public:
-	/**
-	*	Constructs an empty parser with the given settings.
-	*	@param settings Parser settings.
-	*/
-	CIterativeKeyvaluesParser( const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
+	ParseResult GetResultFor( const CKeyvaluesLexer::ReadResult result, bool fExpectedMore = false ) const;
+
+private:
+	CKeyvaluesLexer m_Lexer;
 
 	/**
-	*	Constructs a parser that reads from the given memory, and that has the given settings.
-	*	@param memory Memory to read from.
-	*	@param settings Parser settings.
+	*	 How deep we are in the parsing process.
+	*	 If a keyvalue exists in the global scope, we're 1 level deep.
+	*	 If we're inside a block that has no parent, we're 2 levels deep.
 	*/
-	CIterativeKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
+	int m_iCurrentDepth = 0;
 
-	/**
-	*	Constructs a parser that reads from the given file, and that has the given settings.
-	*	@param pszFilename Name of the file to read from.
-	*	@param settings Parser settings.
-	*/
-	CIterativeKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
+	CKeyvaluesParserSettings m_Settings;
 
-	/**
-	*	Parses a single block from the file. You will have to free the block yourself when you're done with it.
-	*/
-	ParseResult ParseBlock( CKeyvalueBlock*& pBlock );
+	CLogger m_Logger;
+
+	std::unique_ptr<CKeyvalueBlock> m_Keyvalues;
+
+private:
+	CKeyvaluesParser( const CKeyvaluesParser& ) = delete;
+	CKeyvaluesParser& operator=( const CKeyvaluesParser& ) = delete;
 };
 }
 

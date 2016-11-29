@@ -26,6 +26,8 @@
 
 #include "keyvalues/Keyvalues.h"
 
+#include "StringUtils.h"
+
 #include "ASHLSQL.h"
 
 #define SQLITE_BASE_DIR "scripts/databases"
@@ -196,11 +198,11 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 	if( !bHasAllValues )
 		return nullptr;
 
-	std::string szHostName = pHost->GetValue().CStr();
+	std::string szHostName = pHost->GetValue();
 
 	const unsigned int uiPort = ParseMySQLPort( szHostName );
 
-	return new CASMySQLConnection( *g_pSQLThreadPool, szHostName.c_str(), pUser->GetValue().CStr(), pPass->GetValue().CStr(), szDatabase.c_str(), uiPort, "", 0 );
+	return new CASMySQLConnection( *g_pSQLThreadPool, szHostName.c_str(), pUser->GetValue().c_str(), pPass->GetValue().c_str(), szDatabase.c_str(), uiPort, "", 0 );
 }
 
 void RegisterScriptHLSQL( asIScriptEngine& engine )

@@ -6,11 +6,12 @@
 
 #include "FileSystem.h"
 
+#include "keyvalues/Keyvalues.h"
+
 #include "ASMod/IASModModule.h"
 #include "CASModModuleInfo.h"
 #include "CASModLogger.h"
-
-#include "keyvalues/Keyvalues.h"
+#include "ASModConstants.h"
 
 #include "SvenCoopSupport.h"
 
@@ -86,7 +87,7 @@ bool CASMod::Initialize()
 	if( !LoadModules() )
 		return false;
 
-	if( !LoadPlugins() )
+	if( !m_PluginManager.LoadPlugins() )
 		return false;
 
 	LOG_MESSAGE( PLID, "Finished initializing AngelScript Mod Loader" );
@@ -102,7 +103,7 @@ void CASMod::Shutdown()
 
 	m_bFullyInitialized = false;
 
-	UnloadPlugins();
+	m_PluginManager.UnloadPlugins();
 
 	UnloadModules();
 
@@ -150,7 +151,7 @@ void CASMod::Shutdown()
 
 void CASMod::WorldCreated()
 {
-	CallVoidFunction( "void MapInit()" );
+	m_PluginManager.CallVoidFunction( "void MapInit()" );
 }
 
 void CASMod::Think()
@@ -253,8 +254,6 @@ void CASMod::ApplyConfig( kv::Block& block )
 {
 	//Clear any leftover settings.
 	m_EnvType = EnvType::DEFAULT;
-	memset( m_szPluginFallbackPath, 0, sizeof( m_szPluginFallbackPath ) );
-	m_PluginHeaders.clear();
 
 	auto pLoader = block.FindFirstChild<kv::Block>( "loader" );
 
@@ -275,36 +274,7 @@ void CASMod::ApplyConfig( kv::Block& block )
 		}
 	}
 
-	auto pGame = block.FindFirstChild<kv::Block>( "game" );
-
-	if( pGame )
-	{
-		auto pCurrentGame = pGame->FindFirstChild<kv::Block>( gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_NAME ) );
-
-		if( pCurrentGame )
-		{
-			auto pPluginFallbackPath = pCurrentGame->FindFirstChild<kv::KV>( "pluginFallbackPath" );
-
-			if( pPluginFallbackPath )
-			{
-				if( UTIL_SafeStrncpy( m_szPluginFallbackPath, pPluginFallbackPath->GetValue().CStr(), sizeof( m_szPluginFallbackPath ) ) )
-					LOG_MESSAGE( PLID, "Using Plugin fallback path \"%s\"", m_szPluginFallbackPath );
-				else
-					LOG_ERROR( PLID, "Plugin fallback path \"%s\" is too long!", pPluginFallbackPath->GetValue().CStr() );
-			}
-
-			for( auto pHeader : pCurrentGame->GetChildrenByKey( "header" ) )
-			{
-				if( pHeader->GetType() != kv::NodeType::KEYVALUE )
-				{
-					LOG_MESSAGE( PLID, "game.currentgame.header must be a keyvalue!" );
-					continue;
-				}
-
-				m_PluginHeaders.emplace_back( static_cast<kv::KV*>( pHeader )->GetValue().CStr() );
-			}
-		}
-	}
+	m_PluginManager.ApplyConfig( block );
 }
 
 bool CASMod::LoadGameModule()

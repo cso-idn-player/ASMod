@@ -1,27 +1,61 @@
 #include <extdll.h>
 #include <meta_api.h>
 
-#include "Platform.h"
+#include "keyvalues/Keyvalues.h"
 
 #include "StringUtils.h"
 
-#include "keyvalues/Keyvalues.h"
+#include "ASModConstants.h"
 
 #include "CASPluginBuilder.h"
 
 #include "CASMod.h"
 
-/**
-*	@file
-*
-*	CASMod plugin management methods.
-*/
+#include "CASPluginManager.h"
 
-bool CASMod::LoadPlugins()
+void CASPluginManager::ApplyConfig( kv::Block& block )
+{
+	//Clear any leftover settings.
+	memset( m_szPluginFallbackPath, 0, sizeof( m_szPluginFallbackPath ) );
+	m_PluginHeaders.clear();
+
+	auto pGame = block.FindFirstChild<kv::Block>( "game" );
+
+	if( pGame )
+	{
+		auto pCurrentGame = pGame->FindFirstChild<kv::Block>( gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_NAME ) );
+
+		if( pCurrentGame )
+		{
+			auto pPluginFallbackPath = pCurrentGame->FindFirstChild<kv::KV>( "pluginFallbackPath" );
+
+			if( pPluginFallbackPath )
+			{
+				if( UTIL_SafeStrncpy( m_szPluginFallbackPath, pPluginFallbackPath->GetValue().CStr(), sizeof( m_szPluginFallbackPath ) ) )
+					LOG_MESSAGE( PLID, "Using Plugin fallback path \"%s\"", m_szPluginFallbackPath );
+				else
+					LOG_ERROR( PLID, "Plugin fallback path \"%s\" is too long!", pPluginFallbackPath->GetValue().CStr() );
+			}
+
+			for( auto pHeader : pCurrentGame->GetChildrenByKey( "header" ) )
+			{
+				if( pHeader->GetType() != kv::NodeType::KEYVALUE )
+				{
+					LOG_MESSAGE( PLID, "game.currentgame.header must be a keyvalue!" );
+					continue;
+				}
+
+				m_PluginHeaders.emplace_back( static_cast<kv::KV*>( pHeader )->GetValue().CStr() );
+			}
+		}
+	}
+}
+
+bool CASPluginManager::LoadPlugins()
 {
 	LOG_MESSAGE( PLID, "Loading ASMod scripts" );
 
-	m_PluginManager = std::make_unique<CASModuleManager>( *m_Environment.GetScriptEngine() );
+	m_PluginManager = std::make_unique<CASModuleManager>( *g_ASMod.GetEnvironment().GetScriptEngine() );
 
 	//Complete access to everything, including map script only features if we're using Sven Co-op support.
 	m_pPluginDescriptor = m_PluginManager->AddDescriptor( "Plugin", 0xFFFFFFFF ).first;
@@ -44,7 +78,7 @@ bool CASMod::LoadPlugins()
 	char szPluginsFilename[ PATH_MAX ];
 
 	{
-		const auto result = snprintf( szPluginsFilename, sizeof( szPluginsFilename ), "%s/%s", GetLoaderDirectory(), pszPluginsFilename );
+		const auto result = snprintf( szPluginsFilename, sizeof( szPluginsFilename ), "%s/%s", g_ASMod.GetLoaderDirectory(), pszPluginsFilename );
 
 		if( !PrintfSuccess( result, sizeof( szPluginsFilename ) ) )
 		{
@@ -99,7 +133,7 @@ bool CASMod::LoadPlugins()
 	return true;
 }
 
-bool CASMod::LoadPluginFromBlock( kv::Block& block )
+bool CASPluginManager::LoadPluginFromBlock( kv::Block& block )
 {
 	auto pName = block.FindFirstChild<kv::KV>( "name" );
 	auto pScript = block.FindFirstChild<kv::KV>( "script" );
@@ -119,7 +153,7 @@ bool CASMod::LoadPluginFromBlock( kv::Block& block )
 	return LoadPlugin( pName->GetValue().CStr(), pScript->GetValue().CStr() );
 }
 
-bool CASMod::LoadPlugin( const char* const pszPluginName, const char* const pszScriptName )
+bool CASPluginManager::LoadPlugin( const char* const pszPluginName, const char* const pszScriptName )
 {
 	CASPluginBuilder builder( pszPluginName, pszScriptName, m_PluginHeaders, m_szPluginFallbackPath );
 
@@ -140,7 +174,7 @@ bool CASMod::LoadPlugin( const char* const pszPluginName, const char* const pszS
 	return true;
 }
 
-void CASMod::UnloadPlugins()
+void CASPluginManager::UnloadPlugins()
 {
 	//Wasn't fully initialized, can't unload plugins.
 	if( !m_PluginManager )

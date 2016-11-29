@@ -21,16 +21,18 @@ add_sources(
 	dllapi_post.cpp
 	ASMod.h
 	ASMod.rc
+	ASModConstants.h
 	CASMod.h
 	CASMod.cpp
 	CASMod.modules.cpp
-	CASMod.plugins.cpp
 	CASModLogger.h
 	CASModModuleInfo.h
 	CASModModuleInfo.cpp
 	CASModModuleLogger.h
 	CASPluginBuilder.h
 	CASPluginBuilder.cpp
+	CASPluginManager.h
+	CASPluginManager.cpp
 	CreateInterface_api.cpp
 	engine_api.cpp
 	h_export.cpp

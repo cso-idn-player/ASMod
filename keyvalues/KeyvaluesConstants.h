@@ -31,23 +31,6 @@ const char CONTROL_BLOCK_CLOSE	= '}';
 *	Tab width for pretty printing.
 */
 const size_t KEYVALUE_TAB_WIDTH = 4;
-
-/**
-*	Settings for the lexer.
-*/
-struct CKeyvaluesLexerSettings final
-{
-	bool fAllowUnnamedBlocks;
-	bool fLogErrors;
-	bool fLogWarnings;
-
-	CKeyvaluesLexerSettings()
-		: fAllowUnnamedBlocks( false )
-		, fLogErrors( true )
-		, fLogWarnings( true )
-	{
-	}
-};
 }
 
 #endif //KEYVALUES_KEYVALUESCONSTANTS_H

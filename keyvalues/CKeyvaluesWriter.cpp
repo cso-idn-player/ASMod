@@ -1,8 +1,5 @@
 #include <cassert>
 
-#include <extdll.h>
-#include <meta_api.h>
-
 #include "utility/CEscapeSequences.h"
 
 #include "CKeyvalue.h"
@@ -12,14 +9,13 @@
 
 namespace keyvalues
 {
-CKeyvaluesWriter::CKeyvaluesWriter( const char* pszFilename, const CKeyvaluesLexerSettings& settings )
-	: CKeyvaluesWriter( pszFilename, GetNoEscapeSeqConversion(), settings )
+CKeyvaluesWriter::CKeyvaluesWriter( const char* pszFilename )
+	: CKeyvaluesWriter( pszFilename, GetNoEscapeSeqConversion() )
 {
 }
 
-CKeyvaluesWriter::CKeyvaluesWriter( const char* const pszFilename, CEscapeSequences& escapeSeqConversion, const CKeyvaluesLexerSettings& settings )
-	: m_Settings( settings )
-	, m_pEscapeSeqConversion( &escapeSeqConversion )
+CKeyvaluesWriter::CKeyvaluesWriter( const char* const pszFilename, CEscapeSequences& escapeSeqConversion )
+	: m_pEscapeSeqConversion( &escapeSeqConversion )
 {
 	m_szFilename[ 0 ] = '\0';
 
@@ -73,7 +69,7 @@ bool CKeyvaluesWriter::BeginBlock( const char* pszName )
 	if( !pszName )
 		pszName = "";
 
-	if( !( *pszName ) && !m_Settings.fAllowUnnamedBlocks )
+	if( !( *pszName ) && !m_bAllowUnnamedBlocks )
 	{
 		Error( "CKeyvaluesWriter::BeginBlock: No unnamed blocks allowed!\n" );
 
@@ -312,8 +308,7 @@ bool CKeyvaluesWriter::WriteToken( const char* const pszToken )
 
 void CKeyvaluesWriter::Error( const char* pszError )
 {
-	if( m_Settings.fLogErrors )
-		LOG_DEVELOPER( PLID, "%s", pszError );
+	m_Logger( "%s", pszError );
 
 	m_bErrorOccurred = true;
 }

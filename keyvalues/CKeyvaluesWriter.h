@@ -4,15 +4,12 @@
 #include "Platform.h"
 
 #include "KeyvaluesConstants.h"
+#include "KVForward.h"
 
 class CEscapeSequences;
 
 namespace keyvalues
 {
-class CKeyvalueNode;
-class CKeyvalue;
-class CKeyvalueBlock;
-
 /**
 *	Writer that can write keyvalues files.
 */
@@ -25,7 +22,7 @@ public:
 	*	@param pszFilename Name of the file to write to.
 	*	@param settings Writer settings.
 	*/
-	CKeyvaluesWriter( const char* const pszFilename, const CKeyvaluesLexerSettings& settings = CKeyvaluesLexerSettings() );
+	CKeyvaluesWriter( const char* const pszFilename );
 
 	/**
 	*	Constructs a writer that will write to the given file
@@ -34,7 +31,7 @@ public:
 	*	@param escapeSeqConversion Escape sequences conversion rules.
 	*	@param settings Writer settings.
 	*/
-	CKeyvaluesWriter( const char* const pszFilename, CEscapeSequences& escapeSeqConversion, const CKeyvaluesLexerSettings& settings = CKeyvaluesLexerSettings() );
+	CKeyvaluesWriter( const char* const pszFilename, CEscapeSequences& escapeSeqConversion );
 	~CKeyvaluesWriter();
 
 	/**
@@ -46,6 +43,26 @@ public:
 	*	Gets the name of the file that is being written to, or an empty string if no file is open.
 	*/
 	const char* GetFilename() const { return m_szFilename; }
+
+	CLogger& GetLogger() { return m_Logger; }
+
+	/**
+	*	Sets the logger.
+	*/
+	void SetLogger( CLogger&& logger )
+	{
+		m_Logger = std::move( logger );
+	}
+
+	/**
+	*	@return Whether this writer allows unnamed blocks.
+	*/
+	bool AllowUnnamedBlocks() const { return m_bAllowUnnamedBlocks; }
+
+	void AllowUnnamedBlocks( const bool bAllowUnnamedBlocks )
+	{
+		m_bAllowUnnamedBlocks = bAllowUnnamedBlocks;
+	}
 
 	/**
 	*	Returns whether an error has occurred during writing.
@@ -137,15 +154,17 @@ private:
 	void Error( const char* const pszError );
 
 private:
-	CKeyvaluesLexerSettings m_Settings;
-
 	CEscapeSequences* m_pEscapeSeqConversion;
 
 	FILE* m_pFile = nullptr;
 
 	char m_szFilename[ MAX_PATH ];
 
+	CLogger m_Logger;
+
 	size_t m_uiTabDepth = 0;
+
+	bool m_bAllowUnnamedBlocks = false;
 
 	bool m_bErrorOccurred = false;
 

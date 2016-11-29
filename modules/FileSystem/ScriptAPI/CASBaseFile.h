@@ -29,6 +29,7 @@
 *	void CloseFile(): Closes the file. Called only if IsOpen() returns true.
 *	WriteBytes
 *	ReadBytes
+*	TODO: add seeking support
 */
 template<typename SUBCLASS>
 class CASBaseFile : public CASRefCountedBaseClass
@@ -150,22 +151,28 @@ public:
 
 	/**
 	*	Reads up to uiSizeInBytes from the file into the given blob.
-	*	@return Whether anything could be read.
+	*	@return Whether the read operation succeeded.
 	*/
 	bool Read( CASBLOB* pBlob, size_t uiSizeInBytes );
 
 	/**
 	*	Reads as much as possible data from the file into the given blob.
-	*	@return Whether anything could be read.
+	*	@return Whether the read operation succeeded.
 	*/
 	bool Read( CASBLOB* pBlob );
 
 	/**
 	*	Reads data from the file into a blob.
-	*	@param uiSizeInBytes How many bytes to read. If 0, reads in as much data as possible.
+	*	@param uiSizeInBytes How many bytes to read.
 	*	@return The BLOB. If nothing could be read, the blob's size will be 0.
 	*/
-	CASBLOB* ReadBlob( size_t uiSizeInBytes = 0 );
+	CASBLOB* ReadBlob( size_t uiSizeInBytes );
+
+	/**
+	*	Reads data from the file into a blob. Reads as much data as possible.
+	*	@return The BLOB. If nothing could be read, the blob's size will be 0.
+	*/
+	CASBLOB* ReadBlob();
 
 private:
 	/**
@@ -390,10 +397,27 @@ CASBLOB* CASBaseFile<SUBCLASS>::ReadBlob( size_t uiSizeInBytes )
 		//Have to addref here because Read releases the reference it holds
 		pBlob->AddRef();
 
-		if( uiSizeInBytes > 0 )
-			Read( pBlob, uiSizeInBytes );
-		else
-			Read( pBlob );
+		Read( pBlob, uiSizeInBytes );
+	}
+
+	return pBlob;
+}
+
+template<typename SUBCLASS>
+CASBLOB* CASBaseFile<SUBCLASS>::ReadBlob()
+{
+
+	assert( IsOpen() );
+
+	//Always return a valid BLOB.
+	CASBLOB* pBlob = new CASBLOB();
+
+	if( IsReading() )
+	{
+		//Have to addref here because Read releases the reference it holds
+		pBlob->AddRef();
+
+		Read( pBlob );
 	}
 
 	return pBlob;
@@ -454,7 +478,7 @@ void RegisterScriptBaseFile( asIScriptEngine& scriptEngine, const char* const ps
 		asMETHOD( CLASS, ReadLine ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "bool Read(BLOB@ pBlob, size_t uiSizeInBytes)",
+		pszObjectName, "bool Read(BLOB@ pBlob, uint uiSizeInBytes)",
 		asMETHODPR( CLASS, Read, ( CASBLOB*, size_t ), bool ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
@@ -462,8 +486,12 @@ void RegisterScriptBaseFile( asIScriptEngine& scriptEngine, const char* const ps
 		asMETHODPR( CLASS, Read, ( CASBLOB* ), bool ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "BLOB@ ReadBlob(size_t uiSizeInBytes = 0)",
+		pszObjectName, "BLOB@ ReadBlob(uint uiSizeInBytes)",
 		asMETHODPR( CLASS, ReadBlob, ( size_t ), CASBLOB* ), asCALL_THISCALL );
+
+	scriptEngine.RegisterObjectMethod(
+		pszObjectName, "BLOB@ ReadBlob()",
+		asMETHODPR( CLASS, ReadBlob, (), CASBLOB* ), asCALL_THISCALL );
 }
 
 #endif //FILESYSTEM_CASBASEFILE_H

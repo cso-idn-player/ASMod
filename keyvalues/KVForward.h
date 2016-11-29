@@ -27,11 +27,21 @@ struct CLogger
 	{
 	}
 
-	//Copy constructible
-	CLogger( const CLogger& other ) = default;
+	/**
+	*	Constructs a logger that doesn't log to anything.
+	*/
+	CLogger()
+		: CLogger( nullptr )
+	{
+	}
 
-	//Move constructible
+	//Copyable
+	CLogger( const CLogger& other ) = default;
+	CLogger& operator=( const CLogger& other ) = default;
+
+	//Movable
 	CLogger( CLogger&& other ) = default;
+	CLogger& operator=( CLogger&& other ) = default;
 
 	LogFn GetLogFunction() const { return m_LogFn; }
 
@@ -58,12 +68,8 @@ struct CLogger
 	}
 
 private:
-	const LogFn m_LogFn;
-	void* const m_pContext;
-
-private:
-	CLogger& operator=( const CLogger& ) = delete;
-	CLogger& operator=( CLogger&& ) = delete;
+	LogFn m_LogFn;
+	void* m_pContext;
 };
 
 class CKeyvalueNode;

@@ -11,22 +11,12 @@
 
 namespace keyvalues
 {
-CKeyvaluesLexer::CKeyvaluesLexer( const CKeyvaluesLexerSettings& settings )
-	: m_TokenType( TokenType::NONE )
-	, m_pszCurrentPosition( nullptr )
-	, m_Settings( settings )
+CKeyvaluesLexer::CKeyvaluesLexer()
+	: m_pszCurrentPosition( nullptr )
 {
 }
 
-CKeyvaluesLexer::CKeyvaluesLexer( CEscapeSequences& escapeSeqConversion, const CKeyvaluesLexerSettings& settings )
-	: CKeyvaluesLexer( settings )
-{
-	m_pEscapeSeqConversion = &escapeSeqConversion;
-}
-
-CKeyvaluesLexer::CKeyvaluesLexer( Memory_t& memory, const CKeyvaluesLexerSettings& settings )
-	: m_TokenType( TokenType::NONE )
-	, m_Settings( settings )
+CKeyvaluesLexer::CKeyvaluesLexer( Memory_t& memory )
 {
 	assert( memory.HasMemory() );
 
@@ -35,16 +25,8 @@ CKeyvaluesLexer::CKeyvaluesLexer( Memory_t& memory, const CKeyvaluesLexerSetting
 	m_pszCurrentPosition = reinterpret_cast<const char*>( m_Memory.GetMemory() );
 }
 
-CKeyvaluesLexer::CKeyvaluesLexer( Memory_t& memory, CEscapeSequences& escapeSeqConversion, const CKeyvaluesLexerSettings& settings )
-	: CKeyvaluesLexer( memory, settings )
-{
-	m_pEscapeSeqConversion = &escapeSeqConversion;
-}
-
-CKeyvaluesLexer::CKeyvaluesLexer( const char* const pszFilename, const CKeyvaluesLexerSettings& settings )
-	: m_TokenType( TokenType::NONE )
-	, m_pszCurrentPosition( nullptr )
-	, m_Settings( settings )
+CKeyvaluesLexer::CKeyvaluesLexer( const char* const pszFilename )
+	: m_pszCurrentPosition( nullptr )
 {
 	assert( pszFilename );
 
@@ -56,6 +38,7 @@ CKeyvaluesLexer::CKeyvaluesLexer( const char* const pszFilename, const CKeyvalue
 		const int iSizeInBytes = ftell( pFile );
 		fseek( pFile, 0, SEEK_SET );
 
+		//No need to null terminate because we've got the buffer size.
 		CKeyvaluesLexer::Memory_t memory( iSizeInBytes );
 
 		const int iRead = fread( memory.GetMemory(), 1, iSizeInBytes, pFile );
@@ -66,33 +49,18 @@ CKeyvaluesLexer::CKeyvaluesLexer( const char* const pszFilename, const CKeyvalue
 		{
 			m_Memory.Swap( memory );
 
-			//TODO: preparse file and normalize newlines if needed
 			m_pszCurrentPosition = reinterpret_cast<const char*>( m_Memory.GetMemory() );
 		}
 	}
 }
 
-CKeyvaluesLexer::CKeyvaluesLexer( const char* const pszFilename, CEscapeSequences& escapeSeqConversion, const CKeyvaluesLexerSettings& settings )
-	: CKeyvaluesLexer( pszFilename, settings )
-{
-	m_pEscapeSeqConversion = &escapeSeqConversion;
-}
-
-bool CKeyvaluesLexer::HasInputData() const
-{
-	return m_Memory.HasMemory();
-}
-
-CKeyvaluesLexer::size_type CKeyvaluesLexer::GetReadOffset() const
-{
-	return m_pszCurrentPosition ? m_pszCurrentPosition - reinterpret_cast<const char*>( m_Memory.GetMemory() ) : 0;
-}
-
 void CKeyvaluesLexer::Reset()
 {
 	m_pszCurrentPosition = reinterpret_cast<const char*>( m_Memory.GetMemory() );
-	m_TokenType = TokenType::NONE;
-	m_szToken = "";
+	m_Stream.str( "" );
+	m_bWasQuoted = false;
+	m_uiLine = 1;
+	m_uiColumn = 1;
 }
 
 void CKeyvaluesLexer::Swap( CKeyvaluesLexer& other )
@@ -101,33 +69,32 @@ void CKeyvaluesLexer::Swap( CKeyvaluesLexer& other )
 	{
 		m_Memory.Swap( other.m_Memory );
 		std::swap( m_pszCurrentPosition, other.m_pszCurrentPosition );
-		std::swap( m_TokenType, other.m_TokenType );
-		std::swap( m_szToken, other.m_szToken );
-		std::swap( m_Settings, other.m_Settings );
+		std::swap( m_Stream, other.m_Stream );
+		std::swap( m_bWasQuoted, other.m_bWasQuoted );
 	}
 }
 
 CKeyvaluesLexer::ReadResult CKeyvaluesLexer::Read()
 {
-	ReadResult result = ReadNextToken();
-
-	//Reset last token to none to prevent invalid token types
-	if( result == ReadResult::END_OF_BUFFER )
-		m_TokenType = TokenType::NONE;
+	ReadResult result = ReadToken();
 
 	return result;
-}
-
-bool CKeyvaluesLexer::IsValidReadPosition()
-{
-	const size_t offset = ( m_pszCurrentPosition - reinterpret_cast<const char*>( m_Memory.GetMemory() ) );
-	return static_cast<size_type>( m_pszCurrentPosition - reinterpret_cast<const char*>( m_Memory.GetMemory() ) ) < m_Memory.GetSize();
 }
 
 void CKeyvaluesLexer::SkipWhitespace()
 {
 	while( IsValidReadPosition() && isspace( *m_pszCurrentPosition ) )
 	{
+		if( *m_pszCurrentPosition == '\n' )
+		{
+			++m_uiLine;
+			m_uiColumn = 1;
+		}
+		else
+		{
+			++m_uiColumn;
+		}
+
 		++m_pszCurrentPosition;
 	}
 }
@@ -164,234 +131,158 @@ bool CKeyvaluesLexer::SkipCommentLine()
 			++m_pszCurrentPosition;
 		}
 
+		++m_uiLine;
+		m_uiColumn = 1;
+
 		return true;
 	}
 
 	return false;
 }
 
-CKeyvaluesLexer::ReadResult CKeyvaluesLexer::ReadNext( const char*& pszBegin, const char*& pszEnd, bool& fWasQuoted )
+CKeyvaluesLexer::ReadResult CKeyvaluesLexer::ReadToken()
 {
-	//Only true if we encountered a quote.
-	fWasQuoted = false;
+	m_Stream.str( "" );
 
-	ReadResult result = ReadResult::END_OF_BUFFER;
-
-	//Found a quoted string, parse in until we find the next quote or newline
-	//TODO: parse escape sequences properly
-	switch( *m_pszCurrentPosition )
+	do
 	{
-	case CONTROL_QUOTE:
+		SkipWhitespace();
+	}
+	while( SkipComments() );
+
+	if( !IsValidReadPosition() )
+		return ReadResult::END_OF_BUFFER;
+
+	if( *m_pszCurrentPosition == CONTROL_QUOTE )
+	{
+		//Quoted string, parse until end of quote.
+
+		++m_pszCurrentPosition;
+
+		m_bWasQuoted = true;
+
+		return ReadQuotedToken();
+	}
+
+	m_bWasQuoted = false;
+
+	while( IsValidReadPosition() )
+	{
+		if( isspace( *m_pszCurrentPosition ) )
 		{
-			fWasQuoted = true;
-
 			++m_pszCurrentPosition;
-
-			pszBegin = m_pszCurrentPosition;
-
-			while( *m_pszCurrentPosition != CONTROL_QUOTE && *m_pszCurrentPosition != '\n' && IsValidReadPosition() )
-			{
-				//This is the start of an escape sequence, so skip it and the sequence itself.
-				if( m_pEscapeSeqConversion->GetDelimiterChar() == *m_pszCurrentPosition )
-				{
-					++m_pszCurrentPosition;
-
-					if( !IsValidReadPosition() )
-						break;
-				}
-
-				++m_pszCurrentPosition;
-			}
-
-			pszEnd = m_pszCurrentPosition;
-
-			if( IsValidReadPosition() )
-			{
-				result = ReadResult::READ_TOKEN;
-
-				//Advance past the closing quote or newline
-				//TODO: track line number
-				if( *m_pszCurrentPosition != CONTROL_QUOTE && m_Settings.fLogWarnings )
-					LOG_DEVELOPER( PLID, "CKeyvaluesLexer::ReadNext: unclosed quote!\n" );
-
-				++m_pszCurrentPosition;
-			}
-
+			++m_uiLine;
+			m_uiColumn = 1;
 			break;
 		}
 
-		//Read open and close as single characters
-	case CONTROL_BLOCK_OPEN:
-	case CONTROL_BLOCK_CLOSE:
+		if( m_pEscapeSeqConversion->GetDelimiterChar() == *m_pszCurrentPosition )
 		{
-			pszBegin = m_pszCurrentPosition;
-			++m_pszCurrentPosition;
-			pszEnd = m_pszCurrentPosition;
+			const auto result = ReadEscapeSequence();
 
-			result = ReadResult::READ_TOKEN;
-
-			break;
+			if( result != ReadResult::READ_TOKEN )
+				return result;
 		}
-
-	default:
+		else
 		{
-			//Found an unquoted value; read until first whitespace
+			const auto character = *m_pszCurrentPosition;
 
-			pszBegin = m_pszCurrentPosition;
+			m_Stream << character;
 
-			while( !isspace( *m_pszCurrentPosition ) && IsValidReadPosition() )
-				++m_pszCurrentPosition;
+			++m_pszCurrentPosition;
+			++m_uiColumn;
 
-			pszEnd = m_pszCurrentPosition;
-
-			//Always consider this a successful read, in case this is the last token with no newline after it
-			result = ReadResult::READ_TOKEN;
-
-			break;
+			//Always break after parsing a control block.
+			if( character == CONTROL_BLOCK_OPEN ||
+				character == CONTROL_BLOCK_CLOSE || 
+				character == CONTROL_QUOTE )
+			{
+				break;
+			}
 		}
 	}
 
-	return result;
+	return ReadResult::READ_TOKEN;
 }
 
-CKeyvaluesLexer::ReadResult CKeyvaluesLexer::ReadNextToken()
+CKeyvaluesLexer::ReadResult CKeyvaluesLexer::ReadQuotedToken()
 {
-	//No buffer, or reached end
-	if( !IsValidReadPosition() )
+	while( IsValidReadPosition() )
 	{
-		return ReadResult::END_OF_BUFFER;
-	}
-
-	SkipComments();
-
-	//Nothing left to read
-	if( !IsValidReadPosition() )
-	{
-		return ReadResult::END_OF_BUFFER;
-	}
-
-	//SkipComments places us at the first non-whitespace character that isn't a comment
-
-	const char* pszBegin, * pszEnd;
-	bool fWasQuoted;
-
-	//TODO: all of this needs to be redesigned. Instead of two phase parsing, the token should be extracted one character at a time, parsing in escape sequences as needed.
-	//This eliminates the rather messy code currently used here.
-
-	ReadResult result = ReadNext( pszBegin, pszEnd, fWasQuoted );
-
-	if( result == ReadResult::READ_TOKEN )
-	{
-		bool bHandled = false;
-
-		//Don't handle "{" as { (same for }).
-		if( !fWasQuoted )
+		if( *m_pszCurrentPosition == CONTROL_QUOTE )
 		{
-			if( strncmp( pszBegin, "{", 1 ) == 0 )
-			{
-				//Can only open a block after a key
-				if( m_TokenType != TokenType::KEY && !m_Settings.fAllowUnnamedBlocks )
-				{
-					if( m_Settings.fLogErrors )
-						LOG_DEVELOPER( PLID, "CKeyvaluesLexer::ReadNextToken: illegal block open '%c'!\n", CONTROL_BLOCK_OPEN );
-
-					result = ReadResult::FORMAT_ERROR;
-					m_szToken = "";
-					m_TokenType = TokenType::NONE;
-				}
-				else
-				{
-					m_szToken = CONTROL_BLOCK_OPEN;
-					m_TokenType = TokenType::BLOCK_OPEN;
-				}
-
-				bHandled = true;
-			}
-			else if( strncmp( pszBegin, "}", 1 ) == 0 )
-			{
-				//Can only close a block after a block open, close or value
-				if( m_TokenType != TokenType::VALUE && m_TokenType != TokenType::BLOCK_OPEN && m_TokenType != TokenType::BLOCK_CLOSE )
-				{
-					if( m_Settings.fLogErrors )
-						LOG_DEVELOPER( PLID, "CKeyvaluesLexer::ReadNextToken: illegal block close '%c'!\n", CONTROL_BLOCK_CLOSE );
-
-					result = ReadResult::FORMAT_ERROR;
-					m_szToken = "";
-					m_TokenType = TokenType::NONE;
-				}
-				else
-				{
-					m_szToken = CONTROL_BLOCK_CLOSE;
-					m_TokenType = TokenType::BLOCK_CLOSE;
-				}
-
-				bHandled = true;
-			}
+			++m_pszCurrentPosition;
+			++m_uiColumn;
+			return ReadResult::READ_TOKEN;
 		}
-		
-		if( !bHandled )
+
+		if( strncmp( "\r\n", m_pszCurrentPosition, 2 ) == 0 )
 		{
-			//Process and check if there are escape characters.
+			//Handle Windows line endings specially so it's consistent.
+			m_Stream << '\n';
+			m_pszCurrentPosition += 2;
 
-			const size_t uiMaxSize = pszEnd - pszBegin;
+			++m_uiLine;
+			m_uiColumn = 1;
+		}
+		else if( m_pEscapeSeqConversion->GetDelimiterChar() == *m_pszCurrentPosition )
+		{
+			const auto result = ReadEscapeSequence();
 
-			m_szToken.reserve( uiMaxSize );
+			if( result != ReadResult::READ_TOKEN )
+				return result;
+		}
+		else
+		{
+			const auto character = *m_pszCurrentPosition;
 
-			m_szToken.clear();
+			m_Stream << character;
 
-			for( size_t uiIndex = 0; uiIndex < uiMaxSize; )
+			++m_pszCurrentPosition;
+
+			//Handle newlines properly.
+			if( character == '\n' )
 			{
-				if( m_pEscapeSeqConversion->GetDelimiterChar() == pszBegin[ uiIndex ] )
-				{
-					if( uiIndex + 1 < uiMaxSize )
-					{
-						const char cEscapeSeq = m_pEscapeSeqConversion->GetEscapeSequence( &pszBegin[ uiIndex ] );
-
-						if( cEscapeSeq != CEscapeSequences::INVALID_CHAR )
-						{
-							m_szToken += cEscapeSeq;
-
-							uiIndex += 2;
-						}
-						else
-						{
-							if( m_Settings.fLogErrors )
-								LOG_DEVELOPER( PLID, "CKeyvaluesLexer::ReadNextToken: illegal escape sequence '%c%c'!\n", pszBegin[ uiIndex ], pszBegin[ uiIndex + 1 ] );
-
-							result = ReadResult::FORMAT_ERROR;
-							m_szToken = "";
-							m_TokenType = TokenType::NONE;
-
-							break;
-						}
-					}
-					else
-					{
-						if( m_Settings.fLogErrors )
-							LOG_DEVELOPER( PLID, "CKeyvaluesLexer::ReadNextToken: escape sequence delimiter '%c' at the end of a token!\n", pszBegin[ uiIndex - 1 ] );
-
-						result = ReadResult::FORMAT_ERROR;
-						m_szToken = "";
-						m_TokenType = TokenType::NONE;
-
-						break;
-					}
-				}
-				else
-				{
-					m_szToken += pszBegin[ uiIndex ];
-					++uiIndex;
-				}
+				++m_uiLine;
+				m_uiColumn = 1;
 			}
-
-			//If the previous token was a key, this becomes a value
-			if( m_TokenType == TokenType::KEY )
-				m_TokenType = TokenType::VALUE;
 			else
-				m_TokenType = TokenType::KEY;
+			{
+				++m_uiColumn;
+			}
 		}
 	}
 
-	return result;
+	m_Logger( "CKeyvaluesLexer::ReadQuotedToken: Unexpected EOF while reading quoted string (Line %u, Column %u)!\n", m_uiLine, m_uiColumn );
+	return ReadResult::FORMAT_ERROR;
+}
+
+CKeyvaluesLexer::ReadResult CKeyvaluesLexer::ReadEscapeSequence()
+{
+	if( !IsValidReadPosition() )
+	{
+		m_Logger( "CKeyvaluesLexe::ReadToken: Unexpected EOF at line %u, column %u!\n", m_uiLine, m_uiColumn );
+		return ReadResult::FORMAT_ERROR;
+	}
+
+	char escapeSeq = m_pEscapeSeqConversion->GetEscapeSequence( m_pszCurrentPosition );
+
+	if( escapeSeq == CEscapeSequences::INVALID_CHAR )
+	{
+		//Print first 2 characters.
+		m_Logger( "CKeyvaluesLexer::ReadNextToken: Illegal escape sequence \"%.2s\"!\n", m_pszCurrentPosition );
+
+		return ReadResult::FORMAT_ERROR;
+	}
+
+	m_Stream << escapeSeq;
+
+	const auto length = m_pEscapeSeqConversion->GetStringLength( escapeSeq );
+
+	m_pszCurrentPosition += length;
+
+	m_uiColumn += length;
+
+	return ReadResult::READ_TOKEN;
 }
 }

@@ -1,12 +1,14 @@
 #ifndef CKEYVALUESLEXER_H
 #define CKEYVALUESLEXER_H
 
+#include <sstream>
 #include <string>
 
 #include "utility/CEscapeSequences.h"
 #include "utility/CMemory.h"
 
 #include "KeyvaluesConstants.h"
+#include "KVForward.h"
 
 namespace keyvalues
 {
@@ -32,56 +34,28 @@ public:
 
 public:
 	/**
-	*	Constructs an empty lexer
-	*	@param settings Lexer settings.
+	*	Constructs an empty lexer.
 	*/
-	CKeyvaluesLexer( const CKeyvaluesLexerSettings& settings = CKeyvaluesLexerSettings() );
-
-	/**
-	*	Constructs an empty lexer
-	*	@param escapeSeqConversion Escape sequences conversion rules.
-	*	@param settings Lexer settings.
-	*/
-	CKeyvaluesLexer( CEscapeSequences& escapeSeqConversion, const CKeyvaluesLexerSettings& settings = CKeyvaluesLexerSettings() );
+	CKeyvaluesLexer();
 
 	/**
 	*	Constructs a lexer that will read from the given memory
 	*	The given memory will be empty after this constructor returns
 	*	Expects a text buffer with all newlines normalized to \n
 	*	@param memory Memory to use. The original memory buffer is no longer valid after this constructor returns.
-	*	@param settings Lexer settings.
 	*/
-	CKeyvaluesLexer( Memory_t& memory, const CKeyvaluesLexerSettings& settings = CKeyvaluesLexerSettings() );
-
-	/**
-	*	Constructs a lexer that will read from the given memory
-	*	The given memory will be empty after this constructor returns
-	*	Expects a text buffer with all newlines normalized to \n
-	*	@param memory Memory to use. The original memory buffer is no longer valid after this constructor returns.
-	*	@param escapeSeqConversion Escape sequences conversion rules.
-	*	@param settings Lexer settings.
-	*/
-	CKeyvaluesLexer( Memory_t& memory, CEscapeSequences& escapeSeqConversion, const CKeyvaluesLexerSettings& settings = CKeyvaluesLexerSettings() );
+	CKeyvaluesLexer( Memory_t& memory );
 
 	/**
 	*	Constructs a lexer that will read from the given file
 	*	@param pszFilename Name of the file to read from. Must be non-null.
-	*	@param settings Lexer settings.
 	*/
-	CKeyvaluesLexer( const char* const pszFilename, const CKeyvaluesLexerSettings& settings = CKeyvaluesLexerSettings() );
-
-	/**
-	*	Constructs a lexer that will read from the given file
-	*	@param pszFilename Name of the file to read from. Must be non-null.
-	*	@param escapeSeqConversion Escape sequences conversion rules.
-	*	@param settings Lexer settings.
-	*/
-	CKeyvaluesLexer( const char* const pszFilename, CEscapeSequences& escapeSeqConversion, const CKeyvaluesLexerSettings& settings = CKeyvaluesLexerSettings() );
+	CKeyvaluesLexer( const char* const pszFilename );
 
 	/**
 	*	Returns whether the lexer has any input data.
 	*/
-	bool HasInputData() const;
+	bool HasInputData() const { return m_Memory.HasMemory(); }
 
 	/**
 	*	Gets the lexer's data.
@@ -94,14 +68,11 @@ public:
 	size_type GetReadOffset() const;
 
 	/**
-	*	Gets the current token type.
-	*/
-	TokenType GetTokenType() const { return m_TokenType; }
-
-	/**
 	*	Gets the current token.
 	*/
-	const std::string& GetToken() const { return m_szToken; }
+	std::string GetToken() const { return m_Stream.str(); }
+
+	bool WasQuoted() const { return m_bWasQuoted; }
 
 	/**
 	*	Gets the escape sequences conversion object.
@@ -113,10 +84,12 @@ public:
 	*/
 	void SetEscapeSeqConversion( CEscapeSequences& escapeSeqConversion ) { m_pEscapeSeqConversion = &escapeSeqConversion; }
 
-	/**
-	*	Gets the lexer's settings.
-	*/
-	const CKeyvaluesLexerSettings& GetSettings() const { return m_Settings; }
+	CLogger& GetLogger() { return m_Logger; }
+
+	void SetLogger( CLogger&& logger )
+	{
+		m_Logger = std::move( logger );
+	}
 
 	/**
 	*	Resets the read position to the beginning of the input data.
@@ -145,29 +118,42 @@ private:
 	bool SkipComments();
 	bool SkipCommentLine();
 
-	/**
-	*	Reads whatever is next. Handles quoted strings specially
-	*	Advances the current position pointer
-	*/
-	ReadResult ReadNext( const char*& pszBegin, const char*& pszEnd, bool& fWasQuoted );
+	ReadResult ReadToken();
 
-	ReadResult ReadNextToken();
+	ReadResult ReadQuotedToken();
+
+	ReadResult ReadEscapeSequence();
 
 private:
 	Memory_t			m_Memory;
 	const char*			m_pszCurrentPosition;
 
-	TokenType			m_TokenType;			//Type of the last token we read
-	std::string			m_szToken;				//The last token we read
+	std::stringstream m_Stream;
+
+	bool m_bWasQuoted = false;
 
 	CEscapeSequences* m_pEscapeSeqConversion = &GetNoEscapeSeqConversion();
 
-	CKeyvaluesLexerSettings m_Settings;
+	CLogger m_Logger;
+
+	size_t m_uiLine = 1;
+	size_t m_uiColumn = 1;
 
 private:
 	CKeyvaluesLexer( const CKeyvaluesLexer& ) = delete;
 	CKeyvaluesLexer& operator=( const CKeyvaluesLexer& ) = delete;
 };
+
+inline CKeyvaluesLexer::size_type CKeyvaluesLexer::GetReadOffset() const
+{
+	return m_pszCurrentPosition ? m_pszCurrentPosition - reinterpret_cast<const char*>( m_Memory.GetMemory() ) : 0;
+}
+
+inline bool CKeyvaluesLexer::IsValidReadPosition()
+{
+	const auto offset = static_cast<size_type>( m_pszCurrentPosition - reinterpret_cast<const char*>( m_Memory.GetMemory() ) );
+	return offset < m_Memory.GetSize();
+}
 }
 
 #endif //CKEYVALUESLEXER_H

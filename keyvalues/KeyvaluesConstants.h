@@ -13,18 +13,6 @@ enum class NodeType
 };
 
 /**
-*	Token types used by the lexer.
-*/
-enum class TokenType
-{
-	NONE,
-	BLOCK_OPEN,
-	BLOCK_CLOSE,
-	KEY,			//Also used for block keys
-	VALUE
-};
-
-/**
 *	The control character used for quoted strings.
 */
 const char CONTROL_QUOTE		= '\"';

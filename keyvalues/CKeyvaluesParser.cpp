@@ -21,7 +21,7 @@ const char* CBaseKeyvaluesParser::ParseResultToString( const ParseResult result 
 }
 
 CBaseKeyvaluesParser::CBaseKeyvaluesParser( const CKeyvaluesParserSettings& settings, const bool fIsIterative )
-	: m_Lexer( settings.lexerSettings )
+	: m_Lexer()
 	, m_iCurrentDepth( 0 )
 	, m_Settings( settings )
 	, m_fIsIterative( fIsIterative )
@@ -30,7 +30,7 @@ CBaseKeyvaluesParser::CBaseKeyvaluesParser( const CKeyvaluesParserSettings& sett
 }
 
 CBaseKeyvaluesParser::CBaseKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings, const bool fIsIterative )
-	: m_Lexer( memory, settings.lexerSettings )
+	: m_Lexer( memory )
 	, m_iCurrentDepth( 0 )
 	, m_Settings( settings )
 	, m_fIsIterative( fIsIterative )
@@ -39,7 +39,7 @@ CBaseKeyvaluesParser::CBaseKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, c
 }
 
 CBaseKeyvaluesParser::CBaseKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings, const bool fIsIterative )
-	: m_Lexer( pszFilename, settings.lexerSettings )
+	: m_Lexer( pszFilename )
 	, m_iCurrentDepth( 0 )
 	, m_Settings( settings )
 	, m_fIsIterative( fIsIterative )
@@ -62,7 +62,7 @@ size_t CBaseKeyvaluesParser::GetReadOffset() const
 void CBaseKeyvaluesParser::Initialize( CKeyvaluesLexer::Memory_t& memory )
 {
 	//This object will clean up the old state when it destructs
-	CKeyvaluesLexer cleanup( memory, m_Settings.lexerSettings );
+	CKeyvaluesLexer cleanup( memory );
 
 	m_Lexer.Swap( cleanup );
 
@@ -87,11 +87,17 @@ CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::ParseNext( CKeyvalueNode
 
 	bool fIsUnnamed = false;
 
+	auto szToken = m_Lexer.GetToken();
+
 	//The token we've parsed in must be a key, otherwise the format is incorrect
-	if( m_Lexer.GetTokenType() != TokenType::KEY )
+	if( !m_Lexer.WasQuoted() && 
+		( szToken[ 0 ] == CONTROL_BLOCK_OPEN || szToken[ 0 ] == CONTROL_BLOCK_CLOSE ) )
 	{
-		if( !m_Settings.lexerSettings.fAllowUnnamedBlocks )
+		if( !m_Settings.bAllowUnnamedBlocks )
+		{
+			m_Logger( "CBaseKeyvaluesParser::ParseNext: Encountered unnamed block!\n" );
 			return ParseResult::FORMAT_ERROR;
+		}
 		else
 		{
 			fIsUnnamed = true;
@@ -105,42 +111,35 @@ CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::ParseNext( CKeyvalueNode
 	{
 		result = m_Lexer.Read();
 
-		//The lexer will validate the format for us and return FormatError if it failed
-		if( ( parseResult = GetResultFor( result, result == CKeyvaluesLexer::ReadResult::READ_TOKEN ) ) != ParseResult::SUCCESS )
-			return parseResult;
+		if( result != CKeyvaluesLexer::ReadResult::READ_TOKEN )
+			return GetResultFor( result );
 	}
 
-	switch( m_Lexer.GetTokenType() )
+	szToken = m_Lexer.GetToken();
+
+	if( szToken[ 0 ] == CONTROL_BLOCK_OPEN )
 	{
 		//Parse in a block
-	case TokenType::BLOCK_OPEN:
+		//If parsing the root, current depth is 1
+		if( m_iCurrentDepth == 1 || m_Settings.fAllowNestedBlocks )
 		{
-			//If parsing the root, current depth is 1
-			if( m_iCurrentDepth == 1 || m_Settings.fAllowNestedBlocks )
-			{
-				auto pBlock = new CKeyvalueBlock( std::move( szKey ) );
+			auto pBlock = new CKeyvalueBlock( std::move( szKey ) );
 
-				pNode = pBlock;
+			pNode = pBlock;
 
-				parseResult = ParseBlock( pBlock, false );
-			}
-			else
-			{
-				//No nested blocks allowed; error out
-				parseResult = ParseResult::FORMAT_ERROR;
-			}
-			break;
+			parseResult = ParseBlock( pBlock, false );
 		}
-
-	case TokenType::VALUE:
+		else
 		{
-			pNode = new CKeyvalue( szKey, m_Lexer.GetToken() );
-			parseResult = ParseResult::SUCCESS;
-			break;
+			//No nested blocks allowed; error out
+			m_Logger( "CBaseKeyvaluesParser::ParseNext: Encountered nested block!\n" );
+			parseResult = ParseResult::FORMAT_ERROR;
 		}
-
-		//Shouldn't be able to get here since the format is already checked, but just in case
-	default: return ParseResult::FORMAT_ERROR;
+	}
+	else
+	{
+		pNode = new CKeyvalue( szKey, m_Lexer.GetToken() );
+		parseResult = ParseResult::SUCCESS;
 	}
 
 	return parseResult;
@@ -170,8 +169,10 @@ CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::ParseBlock( CKeyvalueBlo
 		if( parseResult != ParseResult::SUCCESS )
 			fContinue = false;
 
+		const auto szToken = m_Lexer.GetToken();
+
 		//End of this block
-		if( m_Lexer.GetTokenType() == TokenType::BLOCK_CLOSE )
+		if( !m_Lexer.WasQuoted() && szToken[ 0 ] == CONTROL_BLOCK_CLOSE )
 		{
 			//Root blocks can't be closed by the buffer
 			if( !fIsRoot )
@@ -180,15 +181,21 @@ CBaseKeyvaluesParser::ParseResult CBaseKeyvaluesParser::ParseBlock( CKeyvalueBlo
 				pBlock->SetChildren( children );
 			}
 			else
+			{
+				m_Logger( "CBaseKeyvaluesParser::ParseBlock: Tried to close root block!\n" );
 				parseResult = ParseResult::FORMAT_ERROR;
+			}
 
 			fContinue = false;
 		}
-		else if( m_Lexer.GetTokenType() == TokenType::NONE )
+		else if( result == CKeyvaluesLexer::ReadResult::END_OF_BUFFER )
 		{
 			//End of the file while in a block
 			if( !fIsRoot )
+			{
+				m_Logger( "CBaseKeyvaluesParser::ParseNext: Unexpected EOF!\n" );
 				parseResult = ParseResult::FORMAT_ERROR;
+			}
 			else
 				pBlock->SetChildren( children );
 

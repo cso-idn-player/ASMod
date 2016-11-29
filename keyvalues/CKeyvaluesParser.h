@@ -13,14 +13,8 @@ class CKeyvalueBlock;
 */
 struct CKeyvaluesParserSettings final
 {
-	CKeyvaluesLexerSettings lexerSettings;
-
-	bool fAllowNestedBlocks;	//Keyvalues like entity data don't allow this
-
-	CKeyvaluesParserSettings()
-		: fAllowNestedBlocks( true )
-	{
-	}
+	bool bAllowUnnamedBlocks = false;
+	bool fAllowNestedBlocks = true;	//Keyvalues like entity data don't allow this
 };
 
 /**
@@ -75,6 +69,12 @@ public:
 	*/
 	void SetEscapeSeqConversion( CEscapeSequences& escapeSeqConversion ) { m_Lexer.SetEscapeSeqConversion( escapeSeqConversion ); }
 
+	void SetLogger( CLogger&& logger )
+	{
+		m_Logger = std::move( logger );
+		m_Lexer.SetLogger( CLogger( m_Logger ) );
+	}
+
 protected:
 	/**
 	*	Construct an empty parser
@@ -112,6 +112,8 @@ private:
 	int m_iCurrentDepth;
 
 	CKeyvaluesParserSettings m_Settings;
+
+	CLogger m_Logger;
 
 	const bool m_fIsIterative;	//Required to make sure the current depth setting is valid for iterative calls
 

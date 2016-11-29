@@ -69,7 +69,7 @@ enum DirectoryFlag
 	IMPLICIT_SUBDIRECTORIES	= FIRST,
 
 	/**
-	*	This is a temporary directory. Temporary directories at set moments.
+	*	This is a temporary directory. Temporary directories are cleared at set moments.
 	*/
 	TEMP,
 	LAST					= TEMP,

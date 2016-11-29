@@ -70,7 +70,7 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 		return;
 	}
 
-	auto pConfig = parser.GetKeyvalues()->FindFirstChild<kv::Block>( "ASModSCSupport" );
+	auto pConfig = parser.GetKeyvalues();
 
 	if( !pConfig )
 	{

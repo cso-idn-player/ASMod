@@ -43,17 +43,26 @@ public:
 		RecursivePrint( node );
 	}
 
+	/**
+	*	@return Whether to print unnamed blocks.
+	*/
+	bool PrintUnnamedBlocks() const { return m_bPrintUnnamedBlocks; }
+
+	void PrintUnnamedBlocks( const bool bPrintUnnamedBlocks )
+	{
+		m_bPrintUnnamedBlocks = bPrintUnnamedBlocks;
+	}
+
 private:
 	void RecursivePrint( const CKeyvalueNode& node )
 	{
 		PrintTabs();
 
-		PrintToken( node.GetKey() );
-
 		switch( node.GetType() )
 		{
 		case NodeType::KEYVALUE:
 			{
+				PrintToken( node.GetKey() );
 				m_Logger( " " );
 				PrintToken( static_cast<const CKeyvalue&>( node ).GetValue() );
 				m_Logger( "\n" );
@@ -64,7 +73,12 @@ private:
 			{
 				const auto& block = static_cast<const CKeyvalueBlock&>( node );
 
-				m_Logger( "\n" );
+				if( m_bPrintUnnamedBlocks || !node.GetKey().empty() )
+				{
+					PrintToken( node.GetKey() );
+					m_Logger( "\n" );
+				}
+
 				PrintTabs();
 				m_Logger( "{\n" );
 
@@ -101,6 +115,8 @@ private:
 	CLogger m_Logger;
 	//To keep dynamic allocation down, store the tab string.
 	std::string m_szTabs;
+
+	bool m_bPrintUnnamedBlocks = true;
 };
 }
 

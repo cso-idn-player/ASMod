@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "CKeyvalueNode.h"
 #include "CKeyvalue.h"
 #include "CKeyvalueBlock.h"
@@ -13,34 +15,28 @@ const char* CKeyvaluesParser::ParseResultToString( const ParseResult result )
 	case ParseResult::SUCCESS:			return "Success";
 	case ParseResult::UNEXPECTED_EOB:	return "Unexpected End Of Buffer";
 	case ParseResult::FORMAT_ERROR:		return "Format Error";
-	case ParseResult::WRONG_NODE_TYPE:	return "Wrong Node Type";
 
-	default:
 	case ParseResult::UNKNOWN_ERROR:	return "Unknown Error";
 	}
+
+	assert( false );
+
+	return "Unknown Error";
 }
 
-CKeyvaluesParser::CKeyvaluesParser( const CKeyvaluesParserSettings& settings )
+CKeyvaluesParser::CKeyvaluesParser()
 	: m_Lexer()
-	, m_Settings( settings )
 {
 }
 
-CKeyvaluesParser::CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings )
+CKeyvaluesParser::CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory)
 	: m_Lexer( memory )
-	, m_Settings( settings )
 {
 }
 
-CKeyvaluesParser::CKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings )
+CKeyvaluesParser::CKeyvaluesParser( const char* const pszFilename)
 	: m_Lexer( pszFilename )
-	, m_Settings( settings )
 {
-}
-
-size_t CKeyvaluesParser::GetReadOffset() const
-{
-	return m_Lexer.GetReadOffset();
 }
 
 void CKeyvaluesParser::Initialize( CKeyvaluesLexer::Memory_t& memory )
@@ -59,13 +55,20 @@ CKeyvaluesParser::ParseResult CKeyvaluesParser::Parse()
 {
 	m_Keyvalues.reset();
 
-	auto pRootNode = new CKeyvalueBlock( "" );
+	CKeyvalueNode* pRootNode;
 
-	ParseResult result = ParseBlock( pRootNode, true );
+	ParseResult result = ParseNextNode( pRootNode );
 
 	if( result == ParseResult::SUCCESS )
 	{
-		m_Keyvalues.reset( pRootNode );
+		if( pRootNode->GetType() == NodeType::BLOCK )
+			m_Keyvalues.reset( static_cast<CKeyvalueBlock*>( pRootNode ) );
+		else
+		{
+			m_Logger( "CKeyvaluesParser::Parse: Data does not contain keyvalues\n" );
+			delete pRootNode;
+			result = ParseResult::FORMAT_ERROR;
+		}
 	}
 	else
 	{
@@ -75,178 +78,114 @@ CKeyvaluesParser::ParseResult CKeyvaluesParser::Parse()
 	return result;
 }
 
-CKeyvaluesParser::ParseResult CKeyvaluesParser::ParseNext( CKeyvalueNode*& pNode, bool fParseFirst )
+CKeyvaluesParser::ParseResult CKeyvaluesParser::ParseNextNode( CKeyvalueNode*& pNode )
 {
-	ParseResult parseResult;
+	pNode = nullptr;
 
-	CKeyvaluesLexer::ReadResult result = CKeyvaluesLexer::ReadResult::END_OF_BUFFER;
+	auto result = m_Lexer.Read();
 
-	if( fParseFirst )
+	if( result != CKeyvaluesLexer::ReadResult::READ_TOKEN )
 	{
-		result = m_Lexer.Read();
-		parseResult = GetResultFor( result );
-
-		if( parseResult != ParseResult::SUCCESS )
-			return parseResult;
+		return GetResultFor( result );
 	}
-	//ParseBlock already read the token, just check it
 
-	bool fIsUnnamed = false;
+	auto szKey = m_Lexer.GetToken();
 
-	auto szToken = m_Lexer.GetToken();
-
-	//The token we've parsed in must be a key, otherwise the format is incorrect
-	if( !m_Lexer.WasQuoted() && 
-		( szToken[ 0 ] == CONTROL_BLOCK_OPEN || szToken[ 0 ] == CONTROL_BLOCK_CLOSE ) )
+	if( !m_Lexer.WasQuoted() )
 	{
-		if( !m_Settings.bAllowUnnamedBlocks )
+		if( szKey[ 0 ] == CONTROL_BLOCK_CLOSE )
 		{
-			m_Logger( "CBaseKeyvaluesParser::ParseNext: Encountered unnamed block!\n" );
+			return m_iCurrentDepth-- > 0 ? ParseResult::END_OF_BLOCK : ParseResult::FORMAT_ERROR;
+		}
+		else if( szKey[ 0 ] == CONTROL_BLOCK_OPEN && !m_bAllowUnnamedBlocks )
+		{
+			m_Logger( "CKeyvaluesParser::ParseNextNode: Expected key name or closing brace, got \"%s\"\n", szKey.c_str() );
 			return ParseResult::FORMAT_ERROR;
 		}
-		else
-		{
-			fIsUnnamed = true;
-		}
 	}
 
-	std::string szKey = !fIsUnnamed ? m_Lexer.GetToken() : "";
+	decltype( m_Lexer.GetToken() ) szToken;
 
-	//Only read again if named
-	if( !fIsUnnamed )
+	if( m_bAllowUnnamedBlocks && szKey[ 0 ] == CONTROL_BLOCK_OPEN )
+	{
+		//Unnamed blocks will have the opening brace as the key.
+		szToken = std::move( szKey );
+
+		szKey = "";
+	}
+	else
 	{
 		result = m_Lexer.Read();
 
 		if( result != CKeyvaluesLexer::ReadResult::READ_TOKEN )
-			return GetResultFor( result );
-	}
-
-	szToken = m_Lexer.GetToken();
-
-	if( szToken[ 0 ] == CONTROL_BLOCK_OPEN )
-	{
-		//Parse in a block
-		//If parsing the root, current depth is 1
-		if( m_iCurrentDepth == 1 || m_Settings.fAllowNestedBlocks )
 		{
-			auto pBlock = new CKeyvalueBlock( std::move( szKey ) );
-
-			pNode = pBlock;
-
-			parseResult = ParseBlock( pBlock, false );
+			return GetResultFor( result, true );
 		}
-		else
-		{
-			//No nested blocks allowed; error out
-			m_Logger( "CBaseKeyvaluesParser::ParseNext: Encountered nested block!\n" );
-			parseResult = ParseResult::FORMAT_ERROR;
-		}
+
+		szToken = m_Lexer.GetToken();
 	}
-	else
+
+	if( !m_Lexer.WasQuoted() )
 	{
-		pNode = new CKeyvalue( szKey, m_Lexer.GetToken() );
-		parseResult = ParseResult::SUCCESS;
+		if( szToken[ 0 ] == CONTROL_BLOCK_OPEN )
+		{
+			//Parse in a block.
+			++m_iCurrentDepth;
+
+			auto block = std::make_unique<CKeyvalueBlock>( std::move( szKey ) );
+
+			CKeyvalueNode* pChildNode;
+
+			ParseResult parseResult;
+
+			CKeyvalueBlock::Children_t children;
+
+			while( ( parseResult = ParseNextNode( pChildNode ) ) == ParseResult::SUCCESS )
+			{
+				children.emplace_back( pChildNode );
+			}
+
+			if( parseResult == ParseResult::END_OF_BLOCK )
+			{
+				block->SetChildren( children );
+			}
+			else
+			{
+				//Destroy all children to prevent leaks.
+				for( auto pChild : children )
+					delete pChild;
+
+				return parseResult;
+			}
+
+			pNode = block.release();
+			return ParseResult::SUCCESS;
+		}
+		else if( szToken[ 0 ] == CONTROL_BLOCK_CLOSE )
+		{
+			m_Logger( "CKeyvaluesParser::ParseNextNode: Expected value or opening brace, got \"%s\"\n", szToken.c_str() );
+			return ParseResult::FORMAT_ERROR;
+		}
 	}
 
-	return parseResult;
+	//Parse in a keyvalue.
+	pNode = new CKeyvalue( std::move( szKey ), std::move( szToken ) );
+
+	return ParseResult::SUCCESS;
 }
 
-CKeyvaluesParser::ParseResult CKeyvaluesParser::ParseBlock( CKeyvalueBlock*& pBlock, bool fIsRoot )
-{
-	++m_iCurrentDepth;
-
-	CKeyvalueBlock::Children_t children;
-
-	CKeyvalueNode* pNode = nullptr;
-
-	ParseResult parseResult;
-
-	bool fContinue = true;
-
-	do
-	{
-		const CKeyvaluesLexer::ReadResult result = m_Lexer.Read();
-
-		if( result == CKeyvaluesLexer::ReadResult::END_OF_BUFFER && fIsRoot )
-			--m_iCurrentDepth;
-
-		parseResult = GetResultFor( result );
-
-		if( parseResult != ParseResult::SUCCESS )
-			fContinue = false;
-
-		const auto szToken = m_Lexer.GetToken();
-
-		//End of this block
-		if( !m_Lexer.WasQuoted() && szToken[ 0 ] == CONTROL_BLOCK_CLOSE )
-		{
-			//Root blocks can't be closed by the buffer
-			if( !fIsRoot )
-			{
-				--m_iCurrentDepth;
-				pBlock->SetChildren( children );
-			}
-			else
-			{
-				m_Logger( "CBaseKeyvaluesParser::ParseBlock: Tried to close root block!\n" );
-				parseResult = ParseResult::FORMAT_ERROR;
-			}
-
-			fContinue = false;
-		}
-		else if( result == CKeyvaluesLexer::ReadResult::END_OF_BUFFER )
-		{
-			//End of the file while in a block
-			if( !fIsRoot )
-			{
-				m_Logger( "CBaseKeyvaluesParser::ParseNext: Unexpected EOF!\n" );
-				parseResult = ParseResult::FORMAT_ERROR;
-			}
-			else
-				pBlock->SetChildren( children );
-
-			fContinue = false;
-		}
-		else
-		{
-			//New keyvalue or block
-			parseResult = ParseNext( pNode, false );
-
-			if( parseResult == ParseResult::SUCCESS )
-			{
-				children.push_back( pNode );
-			}
-			else
-			{
-				delete pNode;
-				fContinue = false;
-			}
-
-			pNode = nullptr;
-		}
-	}
-	while( fContinue );
-
-	if( parseResult != ParseResult::SUCCESS )
-	{
-		//Destroy all children to prevent leaks.
-		for( auto pChild : children )
-			delete pChild;
-	}
-
-	return parseResult;
-}
-
-CKeyvaluesParser::ParseResult CKeyvaluesParser::GetResultFor( const CKeyvaluesLexer::ReadResult result, bool fExpectedMore ) const
+CKeyvaluesParser::ParseResult CKeyvaluesParser::GetResultFor( const CKeyvaluesLexer::ReadResult result, bool bExpectedMore ) const
 {
 	switch( result )
 	{
 	case CKeyvaluesLexer::ReadResult::READ_TOKEN:		return ParseResult::SUCCESS;
-	case CKeyvaluesLexer::ReadResult::END_OF_BUFFER:	return m_iCurrentDepth > 1 || fExpectedMore ? ParseResult::UNEXPECTED_EOB : ParseResult::SUCCESS;
+	case CKeyvaluesLexer::ReadResult::END_OF_BUFFER:	return m_iCurrentDepth > 0 || bExpectedMore ? ParseResult::UNEXPECTED_EOB : ParseResult::SUCCESS;
 	case CKeyvaluesLexer::ReadResult::FORMAT_ERROR:		return ParseResult::FORMAT_ERROR;
-
-	default: return ParseResult::UNKNOWN_ERROR;
 	}
+
+	assert( false );
+
+	return ParseResult::UNKNOWN_ERROR;
 }
 
 

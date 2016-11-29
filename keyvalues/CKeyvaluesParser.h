@@ -11,15 +11,6 @@ class CKeyvalueNode;
 class CKeyvalueBlock;
 
 /**
-*	Parser settings.
-*/
-struct CKeyvaluesParserSettings final
-{
-	bool bAllowUnnamedBlocks = false;
-	bool fAllowNestedBlocks = true;	//Keyvalues like entity data don't allow this
-};
-
-/**
 *	Can parse in keyvalues text data and transform it into hierarchical data structures
 *	Internally uses CKeyvaluesLexer to tokenize the buffer's data
 */
@@ -32,10 +23,10 @@ public:
 	enum class ParseResult
 	{
 		SUCCESS,
+		UNKNOWN_ERROR,
 		UNEXPECTED_EOB,
 		FORMAT_ERROR,
-		UNKNOWN_ERROR,
-		WRONG_NODE_TYPE
+		END_OF_BLOCK
 	};
 
 	static const char* ParseResultToString( const ParseResult result );
@@ -45,22 +36,17 @@ public:
 	*	Construct an empty parser
 	*	An empty parser will return empty, but valid data structures
 	*/
-	CKeyvaluesParser( const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
+	CKeyvaluesParser();
 
 	/**
 	*	Construct a parser that will parse from the given memory buffer
 	*/
-	CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory, const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
+	CKeyvaluesParser( CKeyvaluesLexer::Memory_t& memory );
 
 	/**
 	*	Construct a parser that will parse the given file
 	*/
-	CKeyvaluesParser( const char* const pszFilename, const CKeyvaluesParserSettings& settings = CKeyvaluesParserSettings() );
-
-	/**
-	*	Gets the parser settings.
-	*/
-	const CKeyvaluesParserSettings& GetSettings() const { return m_Settings; }
+	CKeyvaluesParser( const char* const pszFilename );
 
 	/**
 	*	Returns whether the parser has any input data.
@@ -87,6 +73,11 @@ public:
 	*/
 	void SetEscapeSeqConversion( CEscapeSequences& escapeSeqConversion ) { m_Lexer.SetEscapeSeqConversion( escapeSeqConversion ); }
 
+	CLogger& GetLogger() { return m_Logger; }
+
+	/**
+	*	Sets the logger.
+	*/
 	void SetLogger( CLogger&& logger )
 	{
 		m_Logger = std::move( logger );
@@ -109,41 +100,53 @@ public:
 	CKeyvalueBlock* ReleaseKeyvalues();
 
 	/**
-	*	Parses in the entire buffer
-	*	If successful, returns ParseResult::Success
-	*	If the buffer ended before a fully formatted keyvalues format was parsed, returns ParseResult::UnexpectedEOB
-	*	If non-keyvalues data is found, returns ParseResult::FormatError
-	*	If an unknown lexer result occurs, returns ParseResult::UnknownError
+	*	@return Whether this parser allows unnamed blocks.
+	*/
+	bool AllowUnnamedBlocks() const { return m_bAllowUnnamedBlocks; }
+
+	void AllowUnnamedBlocks( const bool bAllowUnnamedBlocks )
+	{
+		m_bAllowUnnamedBlocks = bAllowUnnamedBlocks;
+	}
+
+	/**
+	*	Parses in the next keyvalues block.
+	*	@return	If successful, ParseResult::SUCCESS
+	*			If the buffer ended before a fully formatted keyvalues format was parsed, returns ParseResult::UNEXPECTED_EOB
+	*			If non-keyvalues data is found, returns ParseResult::FORMAT_ERROR
+	*			If an unknown lexer error occurs, returns ParseResult::UNKNOWN_ERROR
 	*/
 	ParseResult Parse();
 
 private:
-	ParseResult ParseNext( CKeyvalueNode*& pNode, bool fParseFirst );
+	ParseResult ParseNextNode( CKeyvalueNode*& pNode );
 
-	ParseResult ParseBlock( CKeyvalueBlock*& pBlock, bool fIsRoot );
-
-	ParseResult GetResultFor( const CKeyvaluesLexer::ReadResult result, bool fExpectedMore = false ) const;
+	ParseResult GetResultFor( const CKeyvaluesLexer::ReadResult result, bool bExpectedMore = false ) const;
 
 private:
 	CKeyvaluesLexer m_Lexer;
 
 	/**
 	*	 How deep we are in the parsing process.
-	*	 If a keyvalue exists in the global scope, we're 1 level deep.
-	*	 If we're inside a block that has no parent, we're 2 levels deep.
+	*	 If we're inside a block that has no parent, we're 1 level deep.
 	*/
 	int m_iCurrentDepth = 0;
-
-	CKeyvaluesParserSettings m_Settings;
 
 	CLogger m_Logger;
 
 	std::unique_ptr<CKeyvalueBlock> m_Keyvalues;
 
+	bool m_bAllowUnnamedBlocks = false;
+
 private:
 	CKeyvaluesParser( const CKeyvaluesParser& ) = delete;
 	CKeyvaluesParser& operator=( const CKeyvaluesParser& ) = delete;
 };
+
+inline size_t CKeyvaluesParser::GetReadOffset() const
+{
+	return m_Lexer.GetReadOffset();
+}
 }
 
 #endif //CKEYVALUESPARSER_H

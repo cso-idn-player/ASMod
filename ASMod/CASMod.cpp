@@ -151,6 +151,9 @@ void CASMod::Shutdown()
 
 void CASMod::WorldCreated()
 {
+	if( !m_bFullyInitialized )
+		return;
+
 	m_PluginManager.CallVoidFunction( "void MapInit()" );
 }
 
@@ -226,6 +229,21 @@ bool CASMod::LoadConfig( const char* pszConfigFilename, const bool bOptional )
 	//Convert escape sequences.
 	parser.SetEscapeSeqConversion( GetEscapeSeqConversion() );
 
+	kv::CLogger logger{
+		[]( void*, const char* pszFormat, ... )
+		{
+			va_list list;
+
+			va_start( list, pszFormat );
+			char szBuffer[ 1024 ];
+			vsnprintf( szBuffer, sizeof( szBuffer ), pszFormat, list );
+			g_engfuncs.pfnServerPrint( szBuffer );
+			va_end( list );
+		}
+	};
+
+	parser.SetLogger( kv::CLogger( logger ) );
+
 	const auto parseResult = parser.Parse();
 
 	if( parseResult != kv::Parser::ParseResult::SUCCESS )
@@ -234,7 +252,7 @@ bool CASMod::LoadConfig( const char* pszConfigFilename, const bool bOptional )
 		return false;
 	}
 
-	auto pConfig = parser.GetKeyvalues()->FindFirstChild<kv::Block>( "ASModConfig" );
+	auto pConfig = parser.GetKeyvalues();
 
 	if( pConfig )
 	{

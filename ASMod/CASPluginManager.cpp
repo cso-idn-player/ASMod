@@ -109,7 +109,7 @@ bool CASPluginManager::LoadPlugins()
 		return false;
 	}
 
-	auto pPlugins = parser.GetKeyvalues()->FindFirstChild<kv::Block>( "ASModPlugins" );
+	auto pPlugins = parser.GetKeyvalues();
 
 	if( pPlugins )
 	{

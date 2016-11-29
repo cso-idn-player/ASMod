@@ -61,7 +61,7 @@ bool CASMod::LoadModules()
 		return false;
 	}
 
-	auto pModules = parser.GetKeyvalues()->FindFirstChild<kv::Block>( "ASModModules" );
+	auto pModules = parser.GetKeyvalues();
 
 	if( pModules )
 	{

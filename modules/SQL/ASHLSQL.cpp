@@ -163,7 +163,7 @@ static CASMySQLConnection* HLCreateMySQLConnectionWithDefaults( const std::strin
 		return nullptr;
 	}
 
-	auto pConnection = parser.GetKeyvalues()->FindFirstChild<kv::Block>( MYSQL_DEFAULT_CONN_BLOCK );
+	auto pConnection = parser.GetKeyvalues();
 
 	if( !pConnection )
 	{

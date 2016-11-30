@@ -244,10 +244,20 @@ set( CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${GLOBAL_
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y" )
 
 #Shared source files.
+#TODO: shouldn't be copy pasting this into the repository - Solokiller
+add_subdirectory( ${CMAKE_SOURCE_DIR}/common common )
+add_subdirectory( ${CMAKE_SOURCE_DIR}/keyvalues keyvalues )
+add_subdirectory( ${CMAKE_SOURCE_DIR}/utility utility )
+
+preprocess_sources()
+
 set( SHARED_SOURCES
+	${PREP_SRCS}
 	${SDK_DIRECTORY}/public/interface.h
 	${SDK_DIRECTORY}/public/interface.cpp
 )
+
+clear_sources()
 
 #Shared include paths.
 set( SHARED_INCLUDE_PATHS

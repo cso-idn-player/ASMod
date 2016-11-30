@@ -4,6 +4,8 @@
 #include <meta_api.h>
 
 #include "keyvalues/Keyvalues.h"
+#include "KeyvaluesHelpers.h"
+#include "KeyvaluesLogging.h"
 
 #include "StringUtils.h"
 
@@ -41,36 +43,14 @@ TYPE OffsetAddress( TYPE address, ptrdiff_t offset )
 
 CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 {
-	LOG_MESSAGE( PLID, "Loading Sven Co-op support config \"%s\"", pszConfigFilename );
-	char szPath[ PATH_MAX ];
+	auto result = LoadKeyvaluesFile( g_ASMod.GetLoaderDirectory(), pszConfigFilename, false, &ASModLogKeyvaluesMessage );
 
-	const auto result = snprintf( szPath, sizeof( szPath ), "%s/%s", g_ASMod.GetLoaderDirectory(), pszConfigFilename );
-
-	if( !PrintfSuccess( result, sizeof( szPath ) ) )
+	if( !result.first )
 	{
-		LOG_ERROR( PLID, "Error while formatting config filename" );
 		return;
 	}
 
-	kv::Parser parser( szPath );
-
-	if( !parser.HasInputData() )
-	{
-		LOG_ERROR( PLID, "Couldn't read from config" );
-		return;
-	}
-
-	parser.SetEscapeSeqConversion( GetEscapeSeqConversion() );
-
-	const auto parseResult = parser.Parse();
-
-	if( parseResult != kv::Parser::ParseResult::SUCCESS )
-	{
-		LOG_ERROR( PLID, "Error while parsing config: %s", kv::Parser::ParseResultToString( parseResult ) );
-		return;
-	}
-
-	auto pConfig = parser.GetKeyvalues();
+	auto pConfig = result.second.get();
 
 	if( !pConfig )
 	{

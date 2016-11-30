@@ -7,6 +7,8 @@
 #include "FileSystem.h"
 
 #include "keyvalues/Keyvalues.h"
+#include "KeyvaluesHelpers.h"
+#include "KeyvaluesLogging.h"
 
 #include "ASMod/IASModModule.h"
 #include "CASModModuleInfo.h"
@@ -192,67 +194,14 @@ IBaseInterface* CASMod::QueryGameFactory( const char* pszName, int* pReturnCode 
 
 bool CASMod::LoadConfig( const char* pszConfigFilename, const bool bOptional )
 {
-	LOG_MESSAGE( PLID, "Loading configuration" );
+	auto result = LoadKeyvaluesFile( GetLoaderDirectory(), pszConfigFilename, bOptional, &ASModLogKeyvaluesMessage );
 
-	if( !pszConfigFilename || !( *pszConfigFilename ) )
+	if( !result.first )
 	{
-		LOG_ERROR( PLID, "CASMod::LoadConfig: Invalid filename" );
 		return false;
 	}
 
-	char szConfigFilename[ PATH_MAX ];
-
-	{
-		const auto result = snprintf( szConfigFilename, sizeof( szConfigFilename ), "%s/%s", GetLoaderDirectory(), pszConfigFilename );
-
-		if( !PrintfSuccess( result, sizeof( szConfigFilename ) ) )
-		{
-			LOG_ERROR( PLID, "Error while formatting configuration filename" );
-			return false;
-		}
-	}
-
-	UTIL_FixSlashes( szConfigFilename );
-
-	kv::Parser parser( szConfigFilename );
-
-	if( !parser.HasInputData() )
-	{
-		if( !bOptional )
-		{
-			LOG_ERROR( PLID, "Config file \"%s\" is required and could not be opened for reading", pszConfigFilename );
-		}
-
-		return false;
-	}
-
-	//Convert escape sequences.
-	parser.SetEscapeSeqConversion( GetEscapeSeqConversion() );
-
-	kv::CLogger logger{
-		[]( void*, const char* pszFormat, ... )
-		{
-			va_list list;
-
-			va_start( list, pszFormat );
-			char szBuffer[ 1024 ];
-			vsnprintf( szBuffer, sizeof( szBuffer ), pszFormat, list );
-			g_engfuncs.pfnServerPrint( szBuffer );
-			va_end( list );
-		}
-	};
-
-	parser.SetLogger( kv::CLogger( logger ) );
-
-	const auto parseResult = parser.Parse();
-
-	if( parseResult != kv::Parser::ParseResult::SUCCESS )
-	{
-		LOG_ERROR( PLID, "Error while parsing config \"%s\": %s", pszConfigFilename, kv::Parser::ParseResultToString( parseResult ) );
-		return false;
-	}
-
-	auto pConfig = parser.GetKeyvalues();
+	auto pConfig = result.second.get();
 
 	if( pConfig )
 	{

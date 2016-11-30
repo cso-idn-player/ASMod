@@ -37,6 +37,8 @@ add_sources(
 	engine_api.cpp
 	h_export.cpp
 	info_name.h
+	KeyvaluesLogging.h
+	KeyvaluesLogging.cpp
 	meta_api.cpp
 	sdk_util.cpp
 	SvenCoopSupport.h
@@ -44,11 +46,6 @@ add_sources(
 )
 
 add_subdirectory( ${CMAKE_SOURCE_DIR}/shared shared )
-
-#TODO: shouldn't be copy pasting this into the repository - Solokiller
-add_subdirectory( ${CMAKE_SOURCE_DIR}/common common )
-add_subdirectory( ${CMAKE_SOURCE_DIR}/keyvalues keyvalues )
-add_subdirectory( ${CMAKE_SOURCE_DIR}/utility utility )
 
 #Add public plugin headers here, if any.
 #add_includes(

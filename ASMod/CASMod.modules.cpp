@@ -2,6 +2,8 @@
 #include <meta_api.h>
 
 #include "keyvalues/Keyvalues.h"
+#include "KeyvaluesHelpers.h"
+#include "KeyvaluesLogging.h"
 
 #include "StringUtils.h"
 
@@ -13,61 +15,20 @@
 
 bool CASMod::LoadModules()
 {
-	LOG_MESSAGE( PLID, "Loading ASMod modules" );
+	auto result = LoadKeyvaluesFile( GetLoaderDirectory(), ASMOD_CFG_MODULES, false, &ASModLogKeyvaluesMessage );
 
-	const char* pszModulesFilename = ASMOD_CFG_MODULES;
-	const bool bOptional = false;
-
-	if( !pszModulesFilename || !( *pszModulesFilename ) )
+	if( !result.first )
 	{
-		LOG_ERROR( PLID, "CASMod::LoadModules: Invalid filename" );
 		return false;
 	}
 
-	char szModulesFilename[ PATH_MAX ];
-
-	{
-		const auto result = snprintf( szModulesFilename, sizeof( szModulesFilename ), "%s/%s", GetLoaderDirectory(), pszModulesFilename );
-
-		if( !PrintfSuccess( result, sizeof( szModulesFilename ) ) )
-		{
-			LOG_ERROR( PLID, "Error while formatting modules filename" );
-			return false;
-		}
-	}
-
-	UTIL_FixSlashes( szModulesFilename );
-
-	kv::Parser parser( szModulesFilename );
-
-	if( !parser.HasInputData() )
-	{
-		if( !bOptional )
-		{
-			LOG_ERROR( PLID, "Modules file \"%s\" is required and could not be opened for reading", pszModulesFilename );
-		}
-
-		return false;
-	}
-
-	//Convert escape sequences.
-	parser.SetEscapeSeqConversion( GetEscapeSeqConversion() );
-
-	const auto parseResult = parser.Parse();
-
-	if( parseResult != kv::Parser::ParseResult::SUCCESS )
-	{
-		LOG_ERROR( PLID, "Error while parsing modules file \"%s\": %s", pszModulesFilename, kv::Parser::ParseResultToString( parseResult ) );
-		return false;
-	}
-
-	auto pModules = parser.GetKeyvalues();
+	auto pModules = result.second.get();
 
 	if( pModules )
 	{
 		if( LoadModulesFromBlock( *pModules ) )
 		{
-			LOG_MESSAGE( PLID, "Modules loaded from \"%s\"", pszModulesFilename );
+			LOG_MESSAGE( PLID, "Modules loaded from \"%s\"", ASMOD_CFG_MODULES );
 		}
 		else
 		{
@@ -76,7 +37,7 @@ bool CASMod::LoadModules()
 	}
 	else
 	{
-		LOG_ERROR( PLID, "Modules file \"%s\" does not contain a module list for ASMod", pszModulesFilename );
+		LOG_ERROR( PLID, "Modules file \"%s\" does not contain a module list for ASMod", ASMOD_CFG_MODULES );
 	}
 
 	return true;

@@ -2,6 +2,8 @@
 #include <meta_api.h>
 
 #include "keyvalues/Keyvalues.h"
+#include "KeyvaluesHelpers.h"
+#include "KeyvaluesLogging.h"
 
 #include "StringUtils.h"
 
@@ -66,50 +68,15 @@ bool CASPluginManager::LoadPlugins()
 		return false;
 	}
 
-	//TODO: this is all boilerplate code we can probably refactor. - Solokiller
-	const char* pszPluginsFilename = ASMOD_CFG_PLUGINS;
+	auto result = LoadKeyvaluesFile( g_ASMod.GetLoaderDirectory(), ASMOD_CFG_PLUGINS, true, &ASModLogKeyvaluesMessage );
 
-	if( !pszPluginsFilename || !( *pszPluginsFilename ) )
+	if( !result.first )
 	{
-		LOG_ERROR( PLID, "CASMod::LoadPlugins: Invalid filename for plugins config file" );
-		return false;
-	}
-
-	char szPluginsFilename[ PATH_MAX ];
-
-	{
-		const auto result = snprintf( szPluginsFilename, sizeof( szPluginsFilename ), "%s/%s", g_ASMod.GetLoaderDirectory(), pszPluginsFilename );
-
-		if( !PrintfSuccess( result, sizeof( szPluginsFilename ) ) )
-		{
-			LOG_ERROR( PLID, "Error while formatting plugins filename" );
-			return false;
-		}
-	}
-
-	UTIL_FixSlashes( szPluginsFilename );
-
-	kv::Parser parser( szPluginsFilename );
-
-	if( !parser.HasInputData() )
-	{
-		LOG_MESSAGE( PLID, "No \"%s\" file provided; no plugins loaded", pszPluginsFilename );
-
+		LOG_MESSAGE( PLID, "No \"%s\" file provided; no plugins loaded", ASMOD_CFG_PLUGINS );
 		return true;
 	}
 
-	//Convert escape sequences.
-	parser.SetEscapeSeqConversion( GetEscapeSeqConversion() );
-
-	const auto parseResult = parser.Parse();
-
-	if( parseResult != kv::Parser::ParseResult::SUCCESS )
-	{
-		LOG_ERROR( PLID, "Error while parsing plugins file \"%s\": %s", pszPluginsFilename, kv::Parser::ParseResultToString( parseResult ) );
-		return false;
-	}
-
-	auto pPlugins = parser.GetKeyvalues();
+	auto pPlugins = result.second.get();
 
 	if( pPlugins )
 	{
@@ -127,7 +94,7 @@ bool CASPluginManager::LoadPlugins()
 	}
 	else
 	{
-		LOG_ERROR( PLID, "Plugins file \"%s\" does not contain a plugins list for ASMod", pszPluginsFilename );
+		LOG_ERROR( PLID, "Plugins file \"%s\" does not contain a plugins list for ASMod", ASMOD_CFG_PLUGINS );
 	}
 
 	return true;

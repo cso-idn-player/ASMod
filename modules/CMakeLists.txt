@@ -5,7 +5,6 @@ set( AS_STRING_OBJNAME "string" CACHE STRING "The name of the object type used t
 set( MODULE_BASE_DIRECTORY ${META_BASE_DIRECTORY}/ASMod/modules )
 
 #Shared source files.
-add_subdirectory( ${CMAKE_SOURCE_DIR}/shared shared )
 add_subdirectory( ${CMAKE_SOURCE_DIR}/shared/ASMod/Module shared/ASMod/Module )
 
 #Process source files for inclusion.

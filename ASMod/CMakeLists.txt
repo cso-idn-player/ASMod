@@ -17,6 +17,7 @@ set( PLUGIN_LINK_FLAGS )
 #Add plugin sources here, or using add_subdirectory.
 add_sources(
 	${SHARED_SOURCES}
+	${SHARED_PLUGIN_SOURCES}
 	dllapi.cpp
 	dllapi_post.cpp
 	ASMod.h
@@ -45,8 +46,6 @@ add_sources(
 	SvenCoopSupport.cpp
 )
 
-add_subdirectory( ${CMAKE_SOURCE_DIR}/shared shared )
-
 #Add public plugin headers here, if any.
 #add_includes(
 #
@@ -73,6 +72,7 @@ target_include_directories( ${PLUGIN_NAME} PRIVATE
 #Define preprocessor symbols here.
 target_compile_definitions( ${PLUGIN_NAME} PRIVATE
 	${SHARED_DEFINITIONS}
+	${SHARED_PLUGIN_DEFS}
 	ASMOD_PLUGIN
 	ASMOD_BASE_DIR="${META_BASE_DIR_RELATIVE}/${PLUGIN_NAME}"
 )

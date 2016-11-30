@@ -182,7 +182,7 @@ IBaseInterface* CASMod::QueryGameFactory( const char* pszName, int* pReturnCode 
 	{
 		if( m_hGame == nullptr )
 		{
-			LOG_ERROR( PLID, "Treid to query game factory with no game loaded!" );
+			LOG_ERROR( PLID, "Tried to query game factory with no game loaded!" );
 		}
 
 		if( pReturnCode )

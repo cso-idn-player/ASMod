@@ -2,6 +2,8 @@
 #define KEYVALUES_KEYVALUES_H
 
 #include <cassert>
+#include <sstream>
+#include <string>
 
 #include "KVForward.h"
 
@@ -14,6 +16,8 @@
 #include "CKeyvaluesLexer.h"
 #include "CKeyvaluesParser.h"
 #include "CKeyvaluesWriter.h"
+
+#include "utility/CEscapeSequences.h"
 
 namespace keyvalues
 {
@@ -52,6 +56,16 @@ public:
 	{
 		m_bPrintUnnamedBlocks = bPrintUnnamedBlocks;
 	}
+
+	/**
+	*	Gets the escape sequences conversion object.
+	*/
+	CEscapeSequences* GetEscapeSeqConversion() const { return m_pEscapeSeqConversion; }
+
+	/**
+	*	Sets the escape sequences conversion object.
+	*/
+	void SetEscapeSeqConversion( CEscapeSequences& escapeSeqConversion ) { m_pEscapeSeqConversion = &escapeSeqConversion; }
 
 private:
 	void RecursivePrint( const CKeyvalueNode& node )
@@ -108,7 +122,24 @@ private:
 
 	void PrintToken( const std::string& szString )
 	{
-		m_Logger( "\"%s\"", szString.c_str() );
+		const char* pszString;
+
+		std::stringstream stream;
+
+		for( auto c : szString )
+		{
+			//Convert escape sequences to their string representation.
+			if( ( pszString = m_pEscapeSeqConversion->GetString( c ) ) != nullptr )
+			{
+				stream << pszString;
+			}
+			else
+			{
+				stream << c;
+			}
+		}
+
+		m_Logger( "\"%s\"", stream.str().c_str() );
 	}
 
 private:
@@ -117,6 +148,8 @@ private:
 	std::string m_szTabs;
 
 	bool m_bPrintUnnamedBlocks = true;
+
+	CEscapeSequences* m_pEscapeSeqConversion = &GetNoEscapeSeqConversion();
 };
 }
 

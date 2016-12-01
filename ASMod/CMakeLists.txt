@@ -34,6 +34,8 @@ add_sources(
 	CASPluginBuilder.cpp
 	CASPluginManager.h
 	CASPluginManager.cpp
+	CMetaSteamworksListener.h
+	CMetaSteamworksListener.cpp
 	CreateInterface_api.cpp
 	engine_api.cpp
 	h_export.cpp
@@ -85,6 +87,7 @@ find_library( AngelscriptUtilsLibD AngelscriptUtilsd PATHS ${CMAKE_SOURCE_DIR}/e
 
 target_link_libraries( ${PLUGIN_NAME}
 	${SHARED_LIBRARY_DEPS}
+	${STEAM_API_LIB}
 	optimized ${AngelscriptLib}
 	optimized ${AngelscriptUtilsLib}
 	debug ${AngelscriptLibD}

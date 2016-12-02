@@ -10,10 +10,10 @@
 #include "KeyvaluesHelpers.h"
 #include "KeyvaluesLogging.h"
 
+#include "ASMod/ASModConstants.h"
 #include "ASMod/IASModModule.h"
 #include "CASModModuleInfo.h"
 #include "CASModLogger.h"
-#include "ASModConstants.h"
 
 #include "SvenCoopSupport.h"
 

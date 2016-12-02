@@ -12,7 +12,7 @@
 
 #include "StringUtils.h"
 
-#include "ASModConstants.h"
+#include "ASMod/ASModConstants.h"
 #include "CASMod.h"
 
 #include "CASPluginBuilder.h"

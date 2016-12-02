@@ -22,7 +22,6 @@ add_sources(
 	dllapi_post.cpp
 	ASMod.h
 	ASMod.rc
-	ASModConstants.h
 	CASMod.h
 	CASMod.cpp
 	CASMod.modules.cpp

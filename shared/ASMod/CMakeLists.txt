@@ -1,4 +1,5 @@
 add_sources(
+	ASModConstants.h
 	CASSimpleEnvironment.h
 	CreateInterface_api.h
 	IASEnvironment.h

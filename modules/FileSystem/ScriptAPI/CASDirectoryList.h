@@ -81,12 +81,12 @@ public:
 	*	Determines if the given directory can be accessed by the given module type and access mode
 	*	If the path exists, and ppDirectory is non-null, it will contain the path
 	*/
-	bool CanAccessDirectory( const char* const pszFilename, const char* const pszPath, const FileAccessBit::FileAccessBit access, const CASDirectory** ppDirectory = nullptr ) const;
+	bool CanAccessDirectory( const char* const pszFilename, const char* const pszPath, const FileAccess::FileAccess access, const CASDirectory** ppDirectory = nullptr ) const;
 
 	/**
 	*	Whether the given directory can be accessed at all using the given access mode.
 	*/
-	bool CanAccessDirectory( const char* const pszFilename, const CASDirectory* const pDirectory, const FileAccessBit::FileAccessBit access ) const;
+	bool CanAccessDirectory( const char* const pszFilename, const CASDirectory* const pDirectory, const FileAccess::FileAccess access ) const;
 
 private:
 	/**

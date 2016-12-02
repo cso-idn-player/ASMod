@@ -49,11 +49,11 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 {
 	const bool bIsOutput = ( uiOpenFlags & OpenFileBit::OMASK ) != 0;
 
-	const FileAccessBit::FileAccessBit requiredAccess = bIsOutput ? FileAccessBit::WRITE : FileAccessBit::READ;
+	const FileAccess::FileAccess requiredAccess = bIsOutput ? FileAccess::WRITE : FileAccess::READ;
 
-	if( !( m_AllowedAccess & requiredAccess ) )
+	if( !( m_AllowedAccess & ( 1 << requiredAccess ) ) )
 	{
-		as::Verbose( "Access denied for \"%s\": Global access setting forbids access\n", pszFilename );
+		as::Verbose( "%s access denied for \"%s\": Global access setting forbids access\n", FileAccess::ToString( requiredAccess ), pszFilename );
 		return nullptr;
 	}
 
@@ -62,13 +62,7 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 
 	if( !( *pszFilename ) )
 	{
-		as::Verbose( "Access denied: Empty filename\n" );
-		return nullptr;
-	}
-
-	if( m_ExtBlacklist.HasExtension( pszFilename, true ) )
-	{
-		as::Verbose( "Access denied for \"%s\": File extension blacklisted\n", pszFilename );
+		as::Verbose( "%s access denied: Empty filename\n", FileAccess::ToString( requiredAccess ) );
 		return nullptr;
 	}
 
@@ -76,6 +70,12 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 	std::string szFilename( pszFilename );
 
 	UTIL_FixSlashes( const_cast<char*>( szFilename.c_str() ) );
+
+	if( !m_FilterList.PassesFilters( pszFilename ) )
+	{
+		as::Verbose( "%s access denied for \"%s\": Failed to pass filters\n", FileAccess::ToString( requiredAccess ), pszFilename );
+		return nullptr;
+	}
 
 	const size_t uiSlash = szFilename.find_last_of( '/' );
 
@@ -89,7 +89,7 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 
 	if( szFilename.empty() )
 	{
-		as::Verbose( "Access denied for \"%s\": No filename component\n", pszFilename );
+		as::Verbose( "%s access denied for \"%s\": No filename component\n", FileAccess::ToString( requiredAccess ), pszFilename );
 		return nullptr;
 	}
 
@@ -112,7 +112,7 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 
 	if( !ASFileSystemUtils::FormatOpenFlags( uiOpenFlags, szMode ) )
 	{
-		as::Verbose( "Access denied for \"%s\": File open flags invalid\n", pszFilename );
+		as::Verbose( "%s access denied for \"%s\": File open flags invalid\n", FileAccess::ToString( requiredAccess ), pszFilename );
 		return nullptr;
 	}
 
@@ -133,7 +133,7 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 
 	if( hHandle == FILESYSTEM_INVALID_HANDLE )
 	{
-		as::Verbose( "Couldn't open file \"%s\"\n", pszFilename );
+		as::Verbose( "Couldn't open file \"%s\" for %s\n", pszFilename, FileAccess::ToString( requiredAccess ) );
 		return nullptr;
 	}
 
@@ -177,7 +177,7 @@ void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
 	}
 
 	//Need to have permission to access this directory.
-	if( !m_DirectoryList.CanAccessDirectory( pszFilename, szPath.c_str(), FileAccessBit::WRITE ) )
+	if( !m_DirectoryList.CanAccessDirectory( pszFilename, szPath.c_str(), FileAccess::WRITE ) )
 		return;
 
 	//We only allow writing to the main game directory, so this works for SteamPipe. - Solokiller
@@ -205,7 +205,7 @@ void CASVirtualFileSystem::RemoveFile( const char* const pszFilename )
 
 void CASVirtualFileSystem::Shutdown()
 {
-	m_ExtBlacklist.RemoveAllExtensions();
+	m_FilterList.RemoveAllFilters();
 	m_DirectoryList.RemoveAllDirectories();
 }
 

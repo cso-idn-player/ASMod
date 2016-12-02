@@ -11,10 +11,10 @@
 
 class CASVirtualFileSystem;
 class CASDirectoryList;
-class CASExtensionList;
+class CASFilterList;
 
 /**
-*	The file that defines filesystem directory access and the extension blacklist.
+*	The file that defines filesystem directory access and the filter list.
 */
 #define ASMOD_CFG_FILESYSTEM ( ASMOD_CFG_DIR "FileSystem.txt" )
 
@@ -71,9 +71,9 @@ private:
 	void LoadSingleDirectoryFromKeyvalues( CASDirectoryList& dirList, kv::Block& block, const char* pszOverridePath = nullptr );
 
 	/**
-	*	Loads an extension list from a config file.
+	*	Loads a filter list from a config file.
 	*/
-	void LoadExtensionListFromKeyvalues( CASExtensionList& extensions, kv::Block& block );
+	void LoadFilterListFromKeyvalues( CASFilterList& filters, kv::Block& block );
 
 private:
 	CASFileSystemModule( const CASFileSystemModule& ) = delete;

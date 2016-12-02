@@ -269,7 +269,7 @@ void CASDirectoryList::ClearTemporaryDirectories()
 	EnumerateDirectories( cleaner, m_Root.GetFirstChild() );
 }
 
-bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const char* const pszPath, const FileAccessBit::FileAccessBit access, const CASDirectory** ppDirectory ) const
+bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const char* const pszPath, const FileAccess::FileAccess access, const CASDirectory** ppDirectory ) const
 {
 	if( ppDirectory )
 		*ppDirectory = nullptr;
@@ -277,22 +277,22 @@ bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const 
 	if( !pszPath )
 		return false;
 
+	if( access == FileAccess::NONE )
+	{
+		as::Verbose( "Access denied for \"%s\": No access bits were given (internal error)\n", pszFilename );
+		return false;
+	}
+
 	if( !( *pszPath ) )
 	{
-		as::Verbose( "Access denied for \"%s\": No directory provided\n", pszFilename );
+		as::Verbose( "%s access denied for \"%s\": No directory provided\n", FileAccess::ToString( access ), pszFilename );
 		return false;
 	}
 
 	//Never allow these, they're exploitable.
 	if( strstr( pszPath, ".." ) )
 	{
-		as::Verbose( "Access denied for \"%s\": File paths cannot contain parent directory (..) as a directory name\n", pszFilename );
-		return false;
-	}
-
-	if( access == FileAccessBit::NONE )
-	{
-		as::Verbose( "Access denied for \"%s\": No access bits were given (internal error)\n", pszFilename );
+		as::Verbose( "%s access denied for \"%s\": File paths cannot contain parent directory (..) as a directory name\n", FileAccess::ToString( access ), pszFilename );
 		return false;
 	}
 
@@ -300,7 +300,7 @@ bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const 
 
 	if( !UTIL_SafeStrncpy( szPath, pszPath, sizeof( szPath ) ) )
 	{
-		as::Verbose( "Access denied for \"%s\": Failed to copy path (internal error)\n", pszFilename );
+		as::Verbose( "%s access denied for \"%s\": Failed to copy path (internal error)\n", FileAccess::ToString( access ), pszFilename );
 		return false;
 	}
 
@@ -312,7 +312,7 @@ bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const 
 
 	if( !pDirectory )
 	{
-		as::Verbose( "Access denied for \"%s\": Couldn't find directory\n", pszFilename );
+		as::Verbose( "%s access denied for \"%s\": Couldn't find directory\n", FileAccess::ToString( access ), pszFilename );
 		return false;
 	}
 
@@ -324,7 +324,7 @@ bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const 
 	{
 		if( !( pDirectory->GetFlags() & DirectoryFlagBit::IMPLICIT_SUBDIRECTORIES ) )
 		{
-			as::Verbose( "Access denied for \"%s\": Parent path does not allow access\n", pszFilename );
+			as::Verbose( "%s access denied for \"%s\": Parent path does not allow access\n", FileAccess::ToString( access ), pszFilename );
 			return false;
 		}
 	}
@@ -332,17 +332,17 @@ bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const 
 	return CanAccessDirectory( pszFilename, pDirectory, access );
 }
 
-bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const CASDirectory* const pDirectory, const FileAccessBit::FileAccessBit access ) const
+bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const CASDirectory* const pDirectory, const FileAccess::FileAccess access ) const
 {
 	if( !pDirectory )
 		return false;
 
-	if( access == FileAccessBit::NONE )
+	if( access == FileAccess::NONE )
 		return false;
 
-	if( !( pDirectory->GetAccess() & access ) )
+	if( !( pDirectory->GetAccess() & ( 1 << access ) ) )
 	{
-		as::Verbose( "Access denied for \"%s\": Access to directory is forbidden\n", pszFilename );
+		as::Verbose( "%s access denied for \"%s\": Access to directory is forbidden\n", FileAccess::ToString( access ), pszFilename );
 		return false;
 	}
 

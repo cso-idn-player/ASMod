@@ -12,8 +12,8 @@ add_sources(
 	CASDirectory.h
 	CASDirectoryList.cpp
 	CASDirectoryList.h
-	CASExtensionList.cpp
-	CASExtensionList.h
+	CASFilterList.cpp
+	CASFilterList.h
 	CASSTDIOFile.cpp
 	CASSTDIOFile.h
 	CASSteamPipeFile.cpp

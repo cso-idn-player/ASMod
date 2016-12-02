@@ -4,7 +4,7 @@
 #include "ASFileSystemConstants.h"
 
 #include "CASDirectoryList.h"
-#include "CASExtensionList.h"
+#include "CASFilterList.h"
 
 class asIScriptEngine;
 class CASSteamPipeFile;
@@ -21,7 +21,7 @@ class CASSteamPipeFile;
 *	whether a directory's properties should implicitly apply to subdirectories that are not added to the list,
 *	and whether the directory contains temporary data (cleared on startup and shutdown).
 *
-*	You can also blacklist file extensions to prevent them from being opened.
+*	You can also add filters to restrict access to files based on regular expressions.
 */
 class CASVirtualFileSystem
 {
@@ -40,14 +40,14 @@ public:
 	CASDirectoryList& GetDirectoryList() { return m_DirectoryList; }
 
 	/**
-	*	@return The extension blacklist.
+	*	@return The filter list.
 	*/
-	const CASExtensionList& GetExtensionBlackList() const { return m_ExtBlacklist; }
+	const CASFilterList& GetFilterList() const { return m_FilterList; }
 
 	/**
-	*	@copydoc GetExtensionBlackList() const
+	*	@copydoc GetFilterList() const
 	*/
-	CASExtensionList& GetExtensionBlackList() { return m_ExtBlacklist; }
+	CASFilterList& GetFilterList() { return m_FilterList; }
 
 	/**
 	*	@return The allowed file access modes.
@@ -79,8 +79,7 @@ public:
 
 private:
 	CASDirectoryList m_DirectoryList;
-
-	CASExtensionList m_ExtBlacklist;
+	CASFilterList m_FilterList;
 
 	FileAccess_t m_AllowedAccess = FileAccessBit::NONE;
 

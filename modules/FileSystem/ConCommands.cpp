@@ -4,6 +4,7 @@
 #include <Angelscript/util/ASLogging.h>
 
 #include "keyvalues/Keyvalues.h"
+#include "KeyvaluesHelpers.h"
 
 #include "ScriptAPI/CASDirectory.h"
 
@@ -84,7 +85,7 @@ struct CWriteFileSystemToFile
 };
 
 /**
-*	Dumps the Angelscript file system and blacklist to a file.
+*	Dumps the Angelscript file system and filter list to a file.
 */
 void DumpFileSystem()
 {
@@ -108,7 +109,7 @@ void DumpFileSystem()
 		return;
 	}
 
-	kv::Writer writer( szBuffer );
+	kv::Writer writer( szBuffer, GetEscapeSeqConversion() );
 
 	if( writer.IsOpen() )
 	{
@@ -116,21 +117,26 @@ void DumpFileSystem()
 
 		const CASDirectory* pDirectory = g_pASFileSystem->GetDirectoryList().GetRootDirectory();
 
-		CWriteFileSystemToFile fsWriter( writer, bOutputExtraInfo );
+		writer.BeginBlock( "directories" );
+			CWriteFileSystemToFile fsWriter( writer, bOutputExtraInfo );
 
-		fsWriter.WriteDirectory( pDirectory );
+			fsWriter.WriteDirectory( pDirectory->GetFirstChild() );
+		writer.EndBlock();
 
-		const CASExtensionList& blacklist = g_pASFileSystem->GetExtensionBlackList();
+		const auto& filterlist = g_pASFileSystem->GetFilterList();
 
-		const auto& extensions = blacklist.GetExtensions();
+		const auto& filters = filterlist.GetFilters();
 
-		if( !extensions.empty() )
+		if( !filters.empty() )
 		{
-			writer.BeginBlock( "ExtensionBlacklist" );
+			writer.BeginBlock( "filters" );
 			{
-				for( const auto extension : extensions )
+				for( const auto& filter : filters )
 				{
-					writer.WriteKeyvalue( "extension", extension.c_str() );
+					writer.BeginBlock( "filter" );
+						writer.WriteKeyvalue( "expression", filter.GetExpressionString().c_str() );
+						WriteFlagsToKeyvalues<FilterFlag>( writer, filter.GetFlags(), "flag" );
+					writer.EndBlock();
 				}
 			}
 			writer.EndBlock();

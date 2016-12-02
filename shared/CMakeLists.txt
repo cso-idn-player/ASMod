@@ -1,5 +1,6 @@
 add_sources(
 	CSteam2IDString.h
+	Enum.h
 	InterfaceHelpers.h
 	KeyvaluesHelpers.h
 	KeyvaluesHelpers.cpp

@@ -75,8 +75,32 @@ bool CASFileSystemModule::Shutdown()
 	return BaseClass::Shutdown();
 }
 
+#include "ScriptAPI/CASFilterList.h"
+
 void CASFileSystemModule::SetupDirectoryAccess( CASVirtualFileSystem& fileSystem )
 {
+
+	{
+		CASFilterList list;
+
+		//Never allow access to cfgs in the main directory.
+		list.AddFilter( "^([^/]|\\.\\/)*\\.cfg$", FilterFlag::Bit::INVERT );
+		//Never allow access to script source files.
+		list.AddFilter( ".*\\.as$", FilterFlag::Bit::INVERT );
+		//Never allow access to the servers directory.
+		list.AddFilter( "(.*\\/)?servers\\/.*", FilterFlag::Bit::INVERT );
+
+		bool bPassed = list.PassesFilters( "./listenserver.cfg" );
+		bPassed = list.PassesFilters( "./mapcycle.txt" );
+		bPassed = list.PassesFilters( "./config.cfg" );
+		bPassed = list.PassesFilters( "maps/svencoop1.cfg" );
+		bPassed = list.PassesFilters( "scripts/maps/HLSP.as" );
+		bPassed = list.PassesFilters( "scripts/maps/cfg/HLSP.cfg" );
+		bPassed = list.PassesFilters( "scripts/plugins/store/saved data.txt" );
+		bPassed = list.PassesFilters( "servers/server.cfg" );
+		bPassed = list.PassesFilters( "./servers/server.cfg" );
+	}
+
 	auto result = LoadKeyvaluesFile( GetASMod().GetLoaderDirectory(), ASMOD_CFG_FILESYSTEM, true );
 
 	bool bInitializedFromFile = false;
@@ -152,10 +176,10 @@ void CASFileSystemModule::SetupDefaultDirectoryAccess( CASVirtualFileSystem& fil
 	//Separate directory for configurations if they want it.
 	dirList.CreateDirectory( "addons/ASMod/configs", FileAccessBit::READ, DirectoryFlagBit::IMPLICIT_SUBDIRECTORIES );
 
-	auto& blacklist = fileSystem.GetExtensionBlackList();
+	auto& filterlist = fileSystem.GetFilterList();
 
 	if( bResetToDefaults )
-		blacklist.RemoveAllExtensions();
+		filterlist.RemoveAllFilters();
 }
 
 void CASFileSystemModule::SetupDirectoryAccessFromKeyvalues( CASVirtualFileSystem& fileSystem, kv::Block& block, const bool bResetToDefaults )
@@ -184,16 +208,16 @@ void CASFileSystemModule::SetupDirectoryAccessFromKeyvalues( CASVirtualFileSyste
 
 	LoadDirectoryAccessFromKeyvalues( fileSystem, block );
 
-	auto pBlacklist = block.FindFirstChild<kv::Block>( "extensionBlacklist" );
+	auto pFilterlist = block.FindFirstChild<kv::Block>( "filters" );
 
 	if( bResetToDefaults )
-		fileSystem.GetExtensionBlackList().RemoveAllExtensions();
+		fileSystem.GetFilterList().RemoveAllFilters();
 
-	if( pBlacklist )
+	if( pFilterlist )
 	{
-		as::Verbose( "Loading extension blacklist\n" );
+		as::Verbose( "Loading filter list\n" );
 
-		LoadExtensionListFromKeyvalues( fileSystem.GetExtensionBlackList(), *pBlacklist );
+		LoadFilterListFromKeyvalues( fileSystem.GetFilterList(), *pFilterlist );
 	}
 }
 
@@ -301,21 +325,33 @@ void CASFileSystemModule::LoadSingleDirectoryFromKeyvalues( CASDirectoryList& di
 	dirList.CreateDirectory( pszOverridePath, accessFlags, dirFlags );
 }
 
-void CASFileSystemModule::LoadExtensionListFromKeyvalues( CASExtensionList& extensions, kv::Block& block )
+void CASFileSystemModule::LoadFilterListFromKeyvalues( CASFilterList& filters, kv::Block& block )
 {
 	size_t uiCount = 0;
 
-	for( auto pNode : block.GetChildrenByKey( "extension" ) )
+	for( auto pNode : block.GetChildrenByKey( "filter" ) )
 	{
-		if( pNode->GetType() != kv::NodeType::KEYVALUE )
+		if( pNode->GetType() != kv::NodeType::BLOCK )
 		{
-			as::Diagnostic( "Found non-keyvalue \"extension\" node while loading extension list\n" );
+			as::Diagnostic( "Found non-keyvalue \"filter\" node while loading filter list\n" );
 			continue;
 		}
 
-		if( extensions.AddExtension( static_cast<kv::KV*>( pNode )->GetValue().c_str() ) )
+		auto pFilter = static_cast<kv::Block*>( pNode );
+
+		auto pExpression = pFilter->FindFirstChild<kv::KV>( "expression" );
+
+		if( !pExpression )
+		{
+			as::Diagnostic( "Found filter with no expression keyvalue\n" );
+			continue;
+		}
+
+		const FilterFlags_t flags = ParseFlagsFromKeyvalues<FilterFlag>( *pFilter, "flag" );
+
+		if( filters.AddFilter( std::string( pExpression->GetValue() ), flags ) )
 			++uiCount;
 	}
 
-	as::Verbose( "Loaded %u file extensions\n", uiCount );
+	as::Verbose( "Loaded %u filters\n", uiCount );
 }

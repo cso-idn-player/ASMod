@@ -8,11 +8,24 @@
 
 void LogKeyvaluesMessage( void*, const char* pszFormat, ... )
 {
+	char szBuffer[ 1024 ];
 	va_list list;
 
 	va_start( list, pszFormat );
-	as::VCritical( pszFormat, list );
+	const auto result = vsnprintf( szBuffer, sizeof( szBuffer ), pszFormat, list );
 	va_end( list );
+
+	if( !PrintfSuccess( result, sizeof( szBuffer ) ) )
+	{
+		as::Critical( "ASModLogKeyvaluesMessage: Couldn't format error message\n" );
+		return;
+	}
+
+	//Strip newlines so we can handle them properly below.
+	if( szBuffer[ result - 1 ] == '\n' )
+		szBuffer[ result - 1 ] = '\0';
+
+	as::Critical( "%s\n", szBuffer );
 }
 
 std::pair<bool, std::unique_ptr<kv::Block>> LoadKeyvaluesFile( const char* const pszBaseDirectory, const char* const pszFilename, const bool bOptional, const kv::LogFn logFn )

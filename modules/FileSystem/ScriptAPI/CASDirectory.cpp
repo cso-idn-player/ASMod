@@ -19,6 +19,10 @@ CASDirectory::CASDirectory( const char* const pszName, const FileAccess_t access
 
 CASDirectory::~CASDirectory()
 {
+	if( m_pParent )
+	{
+		m_pParent->RemoveChild( this );
+	}
 }
 
 bool CASDirectory::HasChild( const CASDirectory* const pDirectory ) const

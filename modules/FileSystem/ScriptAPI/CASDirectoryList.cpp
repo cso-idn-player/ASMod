@@ -19,7 +19,7 @@
 #include "CASDirectoryList.h"
 
 CASDirectoryList::CASDirectoryList()
-	: m_pRoot( new CASDirectory( ".", FileAccessBit::NONE ) )
+	: m_Root( "__ROOT_DIRECTORY__", FileAccessBit::NONE )
 {
 }
 
@@ -48,12 +48,28 @@ CASDirectory* CASDirectoryList::FindDirectory( const char* const pszPath, const 
 
 	UTIL_FixSlashes( szBuffer );
 
-	const size_t uiLength = strlen( szBuffer );
+	size_t uiLength = strlen( szBuffer );
 
-	char* pszCursor = szBuffer;
+	if( strncmp( "./", szBuffer, 2 ) && strcmp( ".", szBuffer ) )
+	{
+		//Prepend the ./ so it can find the root directory. Only matters if the whole path isn't '.'.
+		if( uiLength + 2 >= sizeof( szBuffer ) )
+		{
+			return nullptr;
+		}
+
+		memmove( szBuffer + 2, szBuffer, uiLength );
+		strncpy( szBuffer, "./", 2 );
+	}
+
+	char* pszBuffer = szBuffer;
+
+	uiLength = strlen( pszBuffer );
+
+	char* pszCursor = pszBuffer;
 	char* pszNextSlash = nullptr;
 
-	CASDirectory* pDirectory = m_pRoot;
+	CASDirectory* pDirectory = &m_Root;
 
 	while( *pszCursor )
 	{
@@ -61,7 +77,7 @@ CASDirectory* CASDirectoryList::FindDirectory( const char* const pszPath, const 
 
 		//Point at the null terminator
 		if( !pszNextSlash )
-			pszNextSlash = szBuffer + uiLength;
+			pszNextSlash = pszBuffer + uiLength;
 
 		*pszNextSlash = '\0';
 
@@ -93,7 +109,7 @@ CASDirectory* CASDirectoryList::FindDirectory( const char* const pszPath, const 
 		pDirectory = pNextDir;
 
 		//This is the directory we wanted
-		if( pszNextSlash == szBuffer + uiLength )
+		if( pszNextSlash == pszBuffer + uiLength )
 		{
 			break;
 		}
@@ -119,10 +135,15 @@ CASDirectory* CASDirectoryList::CreateDirectory( const char* const pszPath, cons
 
 	if( szPath.empty() )
 	{
+		//Printing the path seems ridiculous, but it'll help diagnose the problem.
+		as::Critical( "CASDirectoryList::CreateDirectory: Path \"%s\" is empty!\n", pszPath );
 		return nullptr;
 	}
 
 	UTIL_FixSlashes( const_cast<char*>( szPath.data() ) );
+
+	if( szPath.find( "./" ) != 0 && szPath != "." )
+		szPath = "./" + szPath;
 
 	const size_t uiSlash = szPath.find_last_of( '/' );
 
@@ -145,7 +166,7 @@ CASDirectory* CASDirectoryList::CreateDirectory( const char* const pszPath, cons
 
 	if( !pParent )
 	{
-		pParent = m_pRoot;
+		pParent = &m_Root;
 	}
 
 	//Make sure to get just the directory name out of it
@@ -159,6 +180,8 @@ CASDirectory* CASDirectoryList::CreateDirectory( const char* const pszPath, cons
 	}
 
 	pParent->AddChild( pPath );
+
+	as::Verbose( "Created virtual directory \"%s\"\n", szPath.c_str() );
 
 	return pPath;
 }
@@ -196,10 +219,11 @@ void CASDirectoryList::RemoveDirectory( CASDirectory* pDirectory )
 
 void CASDirectoryList::RemoveAllDirectories()
 {
-	if( m_pRoot )
+	auto pRoot = m_Root.GetFirstChild();
+
+	if( pRoot )
 	{
-		RemoveDirectory( m_pRoot );
-		m_pRoot = nullptr;
+		RemoveDirectory( pRoot );
 	}
 }
 
@@ -216,7 +240,7 @@ void CASDirectoryList::CreateWritableDirectories()
 {
 	CCreateWritableDirectories creator;
 
-	EnumerateDirectories( creator, m_pRoot );
+	EnumerateDirectories( creator, m_Root.GetFirstChild() );
 }
 
 struct CClearTempDirectories
@@ -242,7 +266,7 @@ void CASDirectoryList::ClearTemporaryDirectories()
 {
 	CClearTempDirectories cleaner;
 
-	EnumerateDirectories( cleaner, m_pRoot );
+	EnumerateDirectories( cleaner, m_Root.GetFirstChild() );
 }
 
 bool CASDirectoryList::CanAccessDirectory( const char* const pszFilename, const char* const pszPath, const FileAccessBit::FileAccessBit access, const CASDirectory** ppDirectory ) const

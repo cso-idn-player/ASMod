@@ -28,7 +28,7 @@ public:
 	/**
 	*	@return The root directory.
 	*/
-	const CASDirectory* GetRootDirectory() const { return m_pRoot; }
+	const CASDirectory* GetRootDirectory() const { return &m_Root; }
 
 	/**
 	*	Finds a directory.
@@ -95,7 +95,7 @@ private:
 	void RemoveDirectory( CASDirectory* pDirectory );
 
 private:
-	CASDirectory* m_pRoot;
+	CASDirectory m_Root;
 
 private:
 	CASDirectoryList( const CASDirectoryList& ) = delete;

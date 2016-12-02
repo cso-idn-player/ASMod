@@ -16,6 +16,35 @@
 
 #include "CASVirtualFileSystem.h"
 
+void CASVirtualFileSystem::SetAllowedAccess( const FileAccess_t allowedAccess )
+{
+	m_AllowedAccess = allowedAccess;
+
+	char szMessage[ 512 ] = {};
+
+	if( m_AllowedAccess != FileAccessBit::NONE )
+	{
+		for( FileAccess_t access = FileAccess::FIRST; access < FileAccess::COUNT; ++access )
+		{
+			if( m_AllowedAccess & ( 1 << access ) )
+			{
+				if( *szMessage )
+				{
+					UTIL_SafeStrnCat( szMessage, " and ", sizeof( szMessage ) );
+				}
+
+				UTIL_SafeStrnCat( szMessage, FileAccess::ToString( static_cast<FileAccess::FileAccess>( access ) ), sizeof( szMessage ) );
+			}
+		}
+	}
+	else
+	{
+		UTIL_SafeStrncpy( szMessage, FileAccess::ToString( FileAccess::NONE ), sizeof( szMessage ) );
+	}
+
+	as::Diagnostic( "Global filesystem access changed to %s\n", szMessage );
+}
+
 CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename, const OpenFileFlags_t uiOpenFlags )
 {
 	const bool bIsOutput = ( uiOpenFlags & OpenFileBit::OMASK ) != 0;

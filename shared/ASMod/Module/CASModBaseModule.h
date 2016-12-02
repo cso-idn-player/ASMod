@@ -20,6 +20,11 @@ public:
 	bool Shutdown() override;
 
 	/**
+	*	@return The ASMod instance.
+	*/
+	IASMod& GetASMod() { return *m_pASMod; }
+
+	/**
 	*	@return The Angelscript environment.
 	*/
 	IASEnvironment& GetEnvironment() { return *m_pEnvironment; }

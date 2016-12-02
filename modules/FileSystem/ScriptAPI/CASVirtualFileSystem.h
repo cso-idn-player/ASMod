@@ -57,10 +57,7 @@ public:
 	/**
 	*	Sets the allowed file access modes.
 	*/
-	void SetAllowedAccess( const FileAccess_t allowedAccess )
-	{
-		m_AllowedAccess = allowedAccess;
-	}
+	void SetAllowedAccess( const FileAccess_t allowedAccess );
 
 	/**
 	*	Opens a file.

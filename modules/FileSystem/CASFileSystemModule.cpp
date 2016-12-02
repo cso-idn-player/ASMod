@@ -79,28 +79,6 @@ bool CASFileSystemModule::Shutdown()
 
 void CASFileSystemModule::SetupDirectoryAccess( CASVirtualFileSystem& fileSystem )
 {
-
-	{
-		CASFilterList list;
-
-		//Never allow access to cfgs in the main directory.
-		list.AddFilter( "^([^/]|\\.\\/)*\\.cfg$", FilterFlag::Bit::INVERT );
-		//Never allow access to script source files.
-		list.AddFilter( ".*\\.as$", FilterFlag::Bit::INVERT );
-		//Never allow access to the servers directory.
-		list.AddFilter( "(.*\\/)?servers\\/.*", FilterFlag::Bit::INVERT );
-
-		bool bPassed = list.PassesFilters( "./listenserver.cfg" );
-		bPassed = list.PassesFilters( "./mapcycle.txt" );
-		bPassed = list.PassesFilters( "./config.cfg" );
-		bPassed = list.PassesFilters( "maps/svencoop1.cfg" );
-		bPassed = list.PassesFilters( "scripts/maps/HLSP.as" );
-		bPassed = list.PassesFilters( "scripts/maps/cfg/HLSP.cfg" );
-		bPassed = list.PassesFilters( "scripts/plugins/store/saved data.txt" );
-		bPassed = list.PassesFilters( "servers/server.cfg" );
-		bPassed = list.PassesFilters( "./servers/server.cfg" );
-	}
-
 	auto result = LoadKeyvaluesFile( GetASMod().GetLoaderDirectory(), ASMOD_CFG_FILESYSTEM, true );
 
 	bool bInitializedFromFile = false;

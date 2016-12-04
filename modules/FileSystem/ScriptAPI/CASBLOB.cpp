@@ -231,6 +231,16 @@ void CASBLOB::Clear()
 	m_uiReadOffset = 0;
 }
 
+static CASBLOB* CASBLOB_CASBLOB( const size_t uiCapacity )
+{
+	return new CASBLOB( uiCapacity );
+}
+
+static CASBLOB* CASBLOB_CASBLOB( const CASBLOB& other )
+{
+	return new CASBLOB( other );
+}
+
 //Wrapper to convert std::string to char.
 //TODO: need a stdChar API type. - Solokiller
 static bool CASBLOB_Write( CASBLOB* pThis, const std::string& szString, size_t uiSizeInBytes, const std::string& szPad = "\0" )
@@ -247,6 +257,14 @@ void RegisterScriptBLOB( asIScriptEngine& scriptEngine )
 	scriptEngine.RegisterObjectType( pszObjectName, 0, asOBJ_REF );
 
 	as::RegisterRefCountedBaseClass<CASBLOB>( &scriptEngine, pszObjectName );
+
+	scriptEngine.RegisterObjectBehaviour(
+		pszObjectName, asBEHAVE_FACTORY, "BLOB@ BLOB(uint uiCapacity = 0)",
+		asFUNCTIONPR( CASBLOB_CASBLOB, ( size_t ), CASBLOB* ), asCALL_CDECL );
+
+	scriptEngine.RegisterObjectBehaviour(
+		pszObjectName, asBEHAVE_FACTORY, "BLOB@ BLOB(const BLOB& in other)",
+		asFUNCTIONPR( CASBLOB_CASBLOB, ( const CASBLOB& ), CASBLOB* ), asCALL_CDECL );
 
 	scriptEngine.RegisterObjectMethod(
 		pszObjectName, "uint GetCapacity() const",
@@ -265,15 +283,15 @@ void RegisterScriptBLOB( asIScriptEngine& scriptEngine )
 		asMETHOD( CASBLOB, ReadReachedEnd ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "bool ReadSizeValid(size_t uiSizeInBytes) const",
+		pszObjectName, "bool ReadSizeValid(uint uiSizeInBytes) const",
 		asMETHOD( CASBLOB, ReadSizeValid ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "bool WriteBytes(size_t uiSizeInBytes, int iValue = 0)",
+		pszObjectName, "bool WriteBytes(uint uiSizeInBytes, int iValue = 0)",
 		asMETHOD( CASBLOB, WriteBytes ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "bool WriteBytesUntil(size_t uiEndOffset, int iValue = 0)",
+		pszObjectName, "bool WriteBytesUntil(uint uiEndOffset, int iValue = 0)",
 		asMETHOD( CASBLOB, WriteBytesUntil ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
@@ -317,7 +335,7 @@ void RegisterScriptBLOB( asIScriptEngine& scriptEngine )
 		asMETHODPR( CASBLOB, Write, ( double ), bool ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "bool Write(const " AS_STRING_OBJNAME "& in szString, size_t uiSizeInBytes, const " AS_STRING_OBJNAME "& in pad = \"\\0\")",
+		pszObjectName, "bool Write(const " AS_STRING_OBJNAME "& in szString, uint uiSizeInBytes, const " AS_STRING_OBJNAME "& in pad = \"\\0\")",
 		asFUNCTION( CASBLOB_Write ), asCALL_CDECL_OBJFIRST );
 
 	scriptEngine.RegisterObjectMethod(
@@ -407,11 +425,11 @@ void RegisterScriptBLOB( asIScriptEngine& scriptEngine )
 		asMETHODPR( CASBLOB, ReadDouble, ( bool& ), double ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, AS_STRING_OBJNAME " ReadString(size_t uiSizeInBytes)",
+		pszObjectName, AS_STRING_OBJNAME " ReadString(uint uiSizeInBytes)",
 		asMETHODPR( CASBLOB, ReadString, ( size_t ), std::string ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, AS_STRING_OBJNAME " ReadString(size_t uiSizeInBytes, bool& out bSuccess)",
+		pszObjectName, AS_STRING_OBJNAME " ReadString(uint uiSizeInBytes, bool& out bSuccess)",
 		asMETHODPR( CASBLOB, ReadString, ( size_t, bool& ), std::string ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
@@ -423,11 +441,11 @@ void RegisterScriptBLOB( asIScriptEngine& scriptEngine )
 		asMETHODPR( CASBLOB, ReadString, (), std::string ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "void Reserve(size_t uiMinimumSize)",
+		pszObjectName, "void Reserve(uint uiMinimumSize)",
 		asMETHOD( CASBLOB, Reserve ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(
-		pszObjectName, "void Resize(size_t uiNewSize)",
+		pszObjectName, "void Resize(uint uiNewSize)",
 		asMETHOD( CASBLOB, Resize ), asCALL_THISCALL );
 
 	scriptEngine.RegisterObjectMethod(

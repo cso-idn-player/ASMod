@@ -127,6 +127,12 @@ CASSteamPipeFile* CASVirtualFileSystem::OpenFile( const char* const pszFilename,
 		*/
 
 	//SteamPipe version
+	if( g_pFileSystem->IsDirectory( szFilename.c_str() ) )
+	{
+		as::Verbose( "%s access denied for \"%s\": File is a directory\n", FileAccess::ToString( requiredAccess ), pszFilename );
+		return nullptr;
+	}
+
 	//The filesystem is a bit weird when it comes to read/write, this is how we can access files we write
 	//Write to config path, read from anywhere.
 	FileHandle_t hHandle = g_pFileSystem->Open( szFilename.c_str(), szMode.c_str(), bIsOutput ? "GAMECONFIG" : nullptr );

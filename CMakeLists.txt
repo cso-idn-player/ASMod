@@ -381,6 +381,12 @@ if( NOT WIN32 )
 	)	
 endif()
 
+if( UNIX AND NOT APPLE )
+	set( UNIX_FS_LIB stdc++fs )
+else()
+	set( UNIX_FS_LIB )
+endif()
+
 #Shared linker flags.
 set( SHARED_LINKER_FLAGS
 )

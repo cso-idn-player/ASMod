@@ -91,6 +91,7 @@ target_link_libraries( ${PLUGIN_NAME}
 	optimized ${AngelscriptUtilsLib}
 	debug ${AngelscriptLibD}
 	debug ${AngelscriptUtilsLibD}
+	${UNIX_FS_LIB}
 )
 
 #If the user wants automatic deployment to a game directory, set the output directory paths.

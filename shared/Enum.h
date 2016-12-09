@@ -54,37 +54,33 @@ public:															\
 	using ThisClass = name;										\
 	using BitVec_t = bitvec;									\
 																\
-	enum E##name;												\
-	using Enum = E##name;										\
-																\
-	static const char* ToString( const E##name flag );			\
-																\
-	static E##name FromString( const char* const pszString );	\
-																\
-	enum E##name												\
+	typedef enum E##name										\
 	{
 
-#define BEGIN_ENUM_BITS()			\
-	};								\
-									\
-	struct Bit						\
-	{								\
-	private:						\
-		Bit() = delete;				\
-	public:							\
-		enum EBit					\
+#define BEGIN_ENUM_BITS()										\
+	} Enum;														\
+																\
+	struct Bit													\
+	{															\
+	private:													\
+		Bit() = delete;											\
+	public:														\
+		enum EBit												\
 		{
 
-#define END_ENUM()					\
-		};							\
-	};								\
+#define END_ENUM()												\
+		};														\
+	};															\
+	static const char* ToString( const Enum flag );				\
+																\
+	static Enum FromString( const char* const pszString );		\
 }
 
 /**
 *	Defines a bit constant with the value 1 << currentenum::name.
 */
 #define ENUM_BIT( name )			\
-	name = 1 << ThisClass::##name
+	name = 1 << ThisClass::name
 
 /**
 *	Defines a case for an enum value in a switch.

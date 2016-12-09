@@ -38,7 +38,7 @@ std::pair<bool, std::unique_ptr<kv::Block>> LoadKeyvaluesFile(
 template<typename ENUM>
 inline typename ENUM::BitVec_t ParseFlagsFromKeyvalues( kv::Block& block, const char* const pszKeyName )
 {
-	ENUM::BitVec_t flags = ENUM::Bit::NONE;
+	typename ENUM::BitVec_t flags = ENUM::Bit::NONE;
 
 	for( auto pFlagNode : block.GetChildrenByKey( pszKeyName ) )
 	{
@@ -68,10 +68,10 @@ inline typename ENUM::BitVec_t ParseFlagsFromKeyvalues( kv::Block& block, const 
 template<typename ENUM>
 void WriteFlagsToKeyvalues( kv::Writer& writer, typename ENUM::BitVec_t flags, const char* const pszKeyName )
 {
-	for( ENUM::BitVec_t flag = ENUM::FIRST; flag < ENUM::COUNT; ++flag )
+	for( typename ENUM::BitVec_t flag = ENUM::FIRST; flag < ENUM::COUNT; ++flag )
 	{
 		if( flags & ( 1 << flag ) )
-			writer.WriteKeyvalue( pszKeyName, ENUM::ToString( static_cast<ENUM::Enum>( flag ) ) );
+			writer.WriteKeyvalue( pszKeyName, ENUM::ToString( static_cast<typename ENUM::Enum>( flag ) ) );
 	}
 }
 

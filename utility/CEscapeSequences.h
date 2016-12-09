@@ -1,6 +1,8 @@
 #ifndef CESCAPESEQUENCES_H
 #define CESCAPESEQUENCES_H
 
+#include <cstdlib>
+
 /**
 * This class represents a mapping of escape sequences to their string versions
 * E.g. \n becomes \\n

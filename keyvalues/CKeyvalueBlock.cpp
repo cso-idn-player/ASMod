@@ -1,5 +1,7 @@
 #include <cassert>
 
+#include "Platform.h"
+
 #include "CKeyvalue.h"
 #include "CKeyvalueBlock.h"
 

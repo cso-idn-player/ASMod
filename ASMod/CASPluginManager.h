@@ -10,6 +10,8 @@
 #include <Angelscript/wrapper/ASCallable.h>
 #include <Angelscript/wrapper/CASContext.h>
 
+#include "ASMod/IASEnvironment.h"
+
 #include "keyvalues/KVForward.h"
 
 /**
@@ -20,6 +22,13 @@ class CASPluginManager
 public:
 	CASPluginManager() = default;
 	~CASPluginManager() = default;
+
+	IASEnvironment& GetEnvironment() { return *m_pEnvironment; }
+
+	void SetEnvironment( IASEnvironment* pEnvironment )
+	{
+		m_pEnvironment = pEnvironment;
+	}
 
 	/**
 	*	Applies the configuration found in block.
@@ -64,7 +73,7 @@ public:
 	{
 		assert( pszFunctionSignature );
 
-		CASOwningContext ctx( *g_ASMod.GetEnvironment().GetScriptEngine() );
+		CASOwningContext ctx( *m_pEnvironment->GetScriptEngine() );
 
 		decltype( m_PluginManager->FindModuleByIndex( 0 ) ) pModule;
 
@@ -88,6 +97,8 @@ private:
 	char m_szPluginFallbackPath[ PATH_MAX ] = {};
 
 	std::vector<std::string> m_PluginHeaders;
+
+	IASEnvironment* m_pEnvironment = nullptr;
 
 private:
 	CASPluginManager( const CASPluginManager& ) = delete;

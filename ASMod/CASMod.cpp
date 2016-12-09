@@ -437,5 +437,7 @@ bool CASMod::SetupEnvironment()
 
 	as::SetLogger( m_Logger );
 
+	m_PluginManager.SetEnvironment( &m_Environment );
+
 	return m_Environment.IsValid();
 }

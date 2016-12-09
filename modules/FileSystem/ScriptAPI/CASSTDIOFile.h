@@ -24,8 +24,7 @@ public:
 	typedef CASSTDIOFile ThisClass;
 
 protected:
-	template<typename SUBCLASS>
-	friend class CASBaseFile;
+	friend class CASBaseFile<CASSTDIOFile>;
 
 public:
 	/**

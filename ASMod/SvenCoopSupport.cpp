@@ -13,6 +13,9 @@
 
 #include "SvenCoopSupport.h"
 
+//TODO: should be defined in a metamod header somewhere - Solokiller
+#define GIVEFNPTRSTODLL_PROCNAME "GiveFnptrsToDll"
+
 namespace sc
 {
 template<typename TYPE>
@@ -58,8 +61,6 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 		return;
 	}
 
-	//Don't need to parse out addresses for Linux.
-#ifdef WIN32
 	auto pPlatform = pConfig->FindFirstChild<kv::Block>( PLATFORM );
 
 	if( !pPlatform )
@@ -125,8 +126,29 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 		return;
 	}
 
+#ifdef WIN32
 	//On Windows, the module handle is also the base address. - Solokiller
 	const auto offset = reinterpret_cast<ptrdiff_t>( g_ASMod.GetGameModuleHandle() );
+
+#else
+	auto pGiveFnPtrs = dlsym( g_ASMod.GetGameModuleHandle(), GIVEFNPTRSTODLL_PROCNAME );
+
+	if( !pGiveFnPtrs )
+	{
+		LOG_ERROR( PLID, "Couldn't retrieve function \"%s\" from game library", GIVEFNPTRSTODLL_PROCNAME );
+		return;
+	}
+
+	Dl_info info;
+
+	if( dladdr( pGiveFnPtrs, &info ) == 0 )
+	{
+		LOG_ERROR( PLID, "dladdr failed!" );
+		return;
+	}
+
+	const auto offset = reinterpret_cast<ptrdiff_t>( info.dli_fbase );
+#endif
 
 	//Now offset the addresses to their actual address.
 	m_Environment.SetContextFunc( OffsetAddress( contextFunc, offset ) );
@@ -144,25 +166,6 @@ CSvenCoopSupport::CSvenCoopSupport( const char* pszConfigFilename )
 	m_Environment.SetArrayFreeFunc( OffsetAddress( arrayFreeFunc, offset ) );
 
 	m_ManagerFunc = OffsetAddress( m_ManagerFunc, offset );
-#else
-	//On Linux we can just dlsym what we need.
-	m_Environment.SetContextFunc( reinterpret_cast<asGETCONTEXTFN_t>( dlsym( g_ASMod.GetGameModuleHandle(), "asGetActiveContext" ) ) );
-
-	m_Environment.SetLibVersionFunc( reinterpret_cast<asGETLIBVERSIONFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asGetLibraryVersion" ) ) );
-	m_Environment.SetLibOptionsFunc( reinterpret_cast<asGETLIBOPTIONSFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asGetLibraryOptions" ) ) );
-
-	m_Environment.SetAtomicIncFunc( reinterpret_cast<asATOMICINCFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asAtomicInc" ) ) );
-	m_Environment.SetAtomicDecFunc( reinterpret_cast<asATOMICDECFN>( dlsym( g_ASMod.GetGameModuleHandle(), "asAtomicDec" ) ) );
-
-	//These are actually operator new and operator delete
-	m_Environment.SetAllocFunc( reinterpret_cast<asALLOCFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_Znwj" ) ) );
-	m_Environment.SetFreeFunc( reinterpret_cast<asFREEFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_ZdlPv" ) ) );
-	//These are actually operator new[] and operator delete[]
-	m_Environment.SetArrayAllocFunc( reinterpret_cast<asALLOCFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_Znaj" ) ) );
-	m_Environment.SetArrayFreeFunc( reinterpret_cast<asFREEFUNC_t>( dlsym( g_ASMod.GetGameModuleHandle(), "_ZdaPv" ) ) );
-
-	m_ManagerFunc = reinterpret_cast<ManagerFunc>( dlsym( g_ASMod.GetGameModuleHandle(), "_ZN16CASServerManager11GetInstanceEv" ) );
-#endif
 
 	if( !m_ManagerFunc )
 	{

@@ -84,14 +84,15 @@ else()
 	set( ASSQLD "-l:\"${ASSQLD}\"" )
 endif()
 
+#ASSQL depends on AngelscriptUtils, so ensure the link order is correct.
 target_link_libraries( ${MODULE_NAME}
-	${SHARED_LIBRARY_DEPS}
-	${SHARED_MODULE_LIBRARIES}
 	"${SQLITE3}"
 	optimized "${MARIADB}"
 	debug "${MARIADBD}"
 	optimized "${ASSQL}"
 	debug "${ASSQLD}"
+	${SHARED_LIBRARY_DEPS}
+	${SHARED_MODULE_LIBRARIES}
 )
 
 #If the user wants automatic deployment to a game directory, set the output directory paths.

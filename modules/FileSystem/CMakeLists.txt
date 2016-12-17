@@ -55,6 +55,7 @@ target_compile_definitions( ${MODULE_NAME} PRIVATE
 target_link_libraries( ${MODULE_NAME}
 	${SHARED_LIBRARY_DEPS}
 	${SHARED_MODULE_LIBRARIES}
+	${UNIX_FS_LIB}
 )
 
 #If the user wants automatic deployment to a game directory, set the output directory paths.

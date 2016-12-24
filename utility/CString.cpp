@@ -954,9 +954,8 @@ void CString::VFormat( const char* pszFormat, va_list list )
 
 	szBuffer[ sizeof( szBuffer ) - 1 ] = '\0';
 
-	if( iLength < 0 || iLength >= sizeof( szBuffer ) )
+	if( iLength < 0 || static_cast<size_t>( iLength ) >= sizeof( szBuffer ) )
 	{
-		//Error does not use this method, so there is no risk of recursive calls
 		assert( !"Error formatting string" );
 
 		*this = "";

@@ -141,7 +141,7 @@ void CASFileSystemModule::SetupDefaultDirectoryAccess( CASVirtualFileSystem& fil
 	//Allow access to subdirectories as well. (node graphs, models in subdirs, etc)
 	dirList.CreateDirectory( "maps", FileAccessBit::READ, DirectoryFlagBit::IMPLICIT_SUBDIRECTORIES );
 	dirList.CreateDirectory( "models", FileAccessBit::READ, DirectoryFlagBit::IMPLICIT_SUBDIRECTORIES );
-	dirList.CreateDirectory( "sounds", FileAccessBit::READ, DirectoryFlagBit::IMPLICIT_SUBDIRECTORIES );
+	dirList.CreateDirectory( "sound", FileAccessBit::READ, DirectoryFlagBit::IMPLICIT_SUBDIRECTORIES );
 	dirList.CreateDirectory( "sprites", FileAccessBit::READ, DirectoryFlagBit::IMPLICIT_SUBDIRECTORIES );
 
 	//Allow access to the addons directory so Metamod data can be read, but only from the ASMod scripts/ directory.

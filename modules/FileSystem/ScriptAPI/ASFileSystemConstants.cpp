@@ -17,6 +17,9 @@ const char* ToString( const FileAccess access )
 	case NONE:		return "NONE";
 	case READ:		return "READ";
 	case WRITE:		return "WRITE";
+
+		//You're not supposed to do that.
+	case COUNT: break;
 	}
 
 	assert( false );
@@ -47,6 +50,9 @@ const char* ToString( const DirectoryFlag directoryFlag )
 	case NONE:						return "NONE";
 	case IMPLICIT_SUBDIRECTORIES:	return "IMPLICIT_SUBDIRECTORIES";
 	case TEMP:						return "TEMP";
+
+		//You're not supposed to do that.
+	case COUNT: break;
 	}
 
 	assert( false );

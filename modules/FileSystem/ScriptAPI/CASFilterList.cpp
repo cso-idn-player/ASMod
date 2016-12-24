@@ -13,6 +13,9 @@ const char* FilterFlag::ToString( const EFilterFlag flag )
 	{
 	ENUM_CASE( NONE )
 	ENUM_CASE( INVERT )
+
+		//You're not supposed to do that.
+	case COUNT: break;
 	}
 
 	assert( false );

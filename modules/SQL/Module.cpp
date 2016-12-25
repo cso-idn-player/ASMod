@@ -43,12 +43,13 @@ FARPROC WINAPI DelayHook(
 		{
 			char szPath[ MAX_PATH ];
 
+			//TODO: log error if loading failed. - Solokiller
 			const char* pszGameDir = gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR );
 
 			if( !pszGameDir )
 				return nullptr;
 
-			const int iResult = snprintf( szPath, sizeof( szPath ), "%s/%s/%s", pszGameDir, META_BIN_DIRECTORY, pdli->szDll );
+			const int iResult = snprintf( szPath, sizeof( szPath ), "%s/%s/%s", pszGameDir, ASMOD_BIN_DIR_RELATIVE, pdli->szDll );
 
 			if( iResult < 0 || static_cast<size_t>( iResult ) >= sizeof( szPath ) )
 				return nullptr;

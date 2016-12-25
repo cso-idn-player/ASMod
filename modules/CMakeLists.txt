@@ -2,7 +2,7 @@
 set( AS_STRING_OBJNAME "string" CACHE STRING "The name of the object type used to represent strings" )
 
 #Base directory for all modules.
-set( MODULE_BASE_DIRECTORY ${META_BASE_DIRECTORY}/ASMod/modules )
+set( MODULE_BASE_DIRECTORY ${META_BASE_DIRECTORY}/${ASMOD_DIR_NAME}/modules )
 
 #Shared source files.
 add_subdirectory( ${CMAKE_SOURCE_DIR}/shared/ASMod/Module shared/ASMod/Module )

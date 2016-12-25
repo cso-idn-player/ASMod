@@ -74,8 +74,8 @@ else()
 	#The first time you generate the CMake projects there won't be libraries in the destination directory, so we'll link with the local ones instead.
 	#After you've built the project the first time, regenerate the CMake project to link with the correct ones.
 	#Avoid linking with libraries installed in the local system's library directories, always use the version distributed with this repository.
-	find_library( SQLITE3 "${CMAKE_SHARED_LIBRARY_PREFIX}sqlite3${CMAKE_SHARED_LIBRARY_SUFFIX}" PATHS "${META_BIN_DIRECTORY}" ${CMAKE_SOURCE_DIR}/external/SQLite/lib NO_DEFAULT_PATH )
-	find_library( MARIADB "${CMAKE_SHARED_LIBRARY_PREFIX}mariadb.so.2" PATHS "${META_BIN_DIRECTORY}" ${CMAKE_SOURCE_DIR}/external/MariaDB/lib NO_DEFAULT_PATH )
+	find_library( SQLITE3 "${CMAKE_SHARED_LIBRARY_PREFIX}sqlite3${CMAKE_SHARED_LIBRARY_SUFFIX}" PATHS "${ASMOD_BIN_DIR}" ${CMAKE_SOURCE_DIR}/external/SQLite/lib NO_DEFAULT_PATH )
+	find_library( MARIADB "${CMAKE_SHARED_LIBRARY_PREFIX}mariadb.so.2" PATHS "${ASMOD_BIN_DIR}" ${CMAKE_SOURCE_DIR}/external/MariaDB/lib NO_DEFAULT_PATH )
 	set( MARIADBD ${MARIADB} )
 	set( PTHREAD "pthread" )
 	
@@ -123,7 +123,7 @@ clear_sources()
 
 #Make the bin directory if it doesn't exist.
 add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${META_BIN_DIRECTORY}
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${ASMOD_BIN_DIR}
 )
 
 if( WIN32 )
@@ -131,34 +131,34 @@ if( WIN32 )
 	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/SQLite/lib/sqlite3.dll"
-		"${META_BIN_DIRECTORY}"
+		"${ASMOD_BIN_DIR}"
 	)
 
 	#Copy the mariadb dll so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/MariaDB/lib/libmariadb.dll"
-		"${META_BIN_DIRECTORY}"
+		"${ASMOD_BIN_DIR}"
 	)
 
 	#Copy the mariadbd dll so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/MariaDB/lib/libmariadbd.dll"
-		"${META_BIN_DIRECTORY}"
+		"${ASMOD_BIN_DIR}"
 	)
 else()
 	#Copy the sqlite3 library so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/SQLite/lib/libsqlite3.so"
-		"${META_BIN_DIRECTORY}"
+		"${ASMOD_BIN_DIR}"
 	)
 
 	#Copy the mariadb library so the exe can get to it
 	add_custom_command( TARGET ${MODULE_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"${CMAKE_SOURCE_DIR}/external/MariaDB/lib/libmariadb.so.2"
-		"${META_BIN_DIRECTORY}"
+		"${ASMOD_BIN_DIR}"
 	)
 endif()

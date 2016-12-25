@@ -1,6 +1,8 @@
 #include <extdll.h>
 #include <meta_api.h>
 
+#include <Angelscript/util/ASLogging.h>
+
 #include "Module.h"
 
 meta_globals_t *gpMetaGlobals;		// metamod globals
@@ -38,23 +40,35 @@ FARPROC WINAPI DelayHook(
 {
 	if( dliNotify == dliNotePreLoadLibrary )
 	{
+		//TODO: libmariadb dll is unused due to linking with static library. - Solokiller
 		if( strcmp( pdli->szDll, "sqlite3.dll" ) == 0 ||
 			strcmp( pdli->szDll, "libmariadb.dll" ) == 0 )
 		{
 			char szPath[ MAX_PATH ];
 
-			//TODO: log error if loading failed. - Solokiller
+			//TODO: refactor common code to helper functions. - Solokiller
 			const char* pszGameDir = gpMetaUtilFuncs->pfnGetGameInfo( PLID, GINFO_GAMEDIR );
 
 			if( !pszGameDir )
+			{
+				as::Critical( "Couldn't get game directory from Metamod to delay load library \"%s\"\n", pdli->szDll );
 				return nullptr;
+			}
 
 			const int iResult = snprintf( szPath, sizeof( szPath ), "%s/%s/%s", pszGameDir, ASMOD_BIN_DIR_RELATIVE, pdli->szDll );
 
 			if( iResult < 0 || static_cast<size_t>( iResult ) >= sizeof( szPath ) )
+			{
+				as::Critical( "Failed to format path for delay loaded library \"%s\"\n", pdli->szDll );
 				return nullptr;
+			}
 
 			HMODULE hLib = LoadLibraryA( szPath );
+
+			if( hLib == NULL )
+			{
+				as::Critical( "Failed to load delay loaded library \"%s\"\n", pdli->szDll );
+			}
 
 			return ( FARPROC ) hLib;
 		}

@@ -219,7 +219,8 @@ else()
 	#All warnings.
 	#No unknown pragma directives.
 	#No attributes.
-	set( GLOBAL_COMPILER_FLAGS "-Wall -Wno-unknown-pragmas -Wno-attributes" )
+	#Emit additional platform specific debug info for GDB to use. The engine also does this, this adds things like function argument info & line numbers.
+	set( GLOBAL_COMPILER_FLAGS "-Wall -Wno-unknown-pragmas -Wno-attributes -g" )
 	
 	#Optimize for speed.
 	#Omit frame pointers.
